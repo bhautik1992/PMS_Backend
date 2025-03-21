@@ -1,5 +1,10 @@
 import express from 'express';
-import { createUser, getUsers, updateProfile, changePassword, getBankDetails, handleUserPermission, assignPermissions } from '../../controllers/UserController.js';
+import { 
+    createUser, getUsers, 
+    updateProfile, changePassword, 
+    getBankDetails, handleUserPermission, 
+    assignPermissions, generateEmployeeCode 
+} from '../../controllers/UserController.js';
 import { protectRoute } from '../../middleware/Authenticate.js';
 import upload from '../../middleware/multer.js';
 
@@ -23,6 +28,7 @@ router.post('/change_password/:userId', protectRoute, changePassword);
 router.get('/bank_details/:userId', protectRoute, getBankDetails);
 router.get('/permissions/:userId', protectRoute, handleUserPermission);
 router.post('/permissions/assign', protectRoute, assignPermissions);
+router.get('/generate/employee_code', protectRoute, generateEmployeeCode);
 
 export default router;
 

@@ -6,6 +6,8 @@ import { rolePermissionsTable } from './RolePermissionsTableSeeder.js';
 import { usersTable } from './UsersTable.js';
 import { bankDetailsTable } from './BankDetailsTable.js';
 import { settingTable } from './SettingsTable.js';
+import { designationTable } from './DesignationTableSeeder.js';
+import { banksTable } from './BanksTableSeeder.js';
 
 dotenv.config();
 
@@ -13,10 +15,12 @@ const seedDatabase = async () => {
     try {
         await connectDB();
 
+        await designationTable();
         await rolesTable();
         await permissionsTable();
         await rolePermissionsTable();
         await usersTable();
+        await banksTable();
         await bankDetailsTable();
         await settingTable();
 

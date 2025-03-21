@@ -1,5 +1,6 @@
 import mongoose from 'mongoose';
 import User from '../../models/User.js';
+import Banks from '../../models/Banks.js';
 import BankDetails from '../../models/BankDetails.js';
 import connectDB from '../../config/database.js';
 
@@ -14,9 +15,16 @@ export const bankDetailsTable = async () => {
             return;
         }
 
+        const bank = await Banks.findOne({ name: "HDFC" });
+        if (!bank) {
+            console.error("Bank not found! Please run the banks seeder first.");
+            mongoose.connection.close();
+            return;
+        }
+
         const defaultBankDetails = [{
             user_id        : user._id,
-            bank_name      : "HDFC",
+            bank_id        : bank._id,
             account_number : "50100180248412",
             ifsc_code      : "HDFC0001683",
             branch_name    : "SAVARKUNDLA",

@@ -17,29 +17,31 @@ export const getUsers = async (req, res) => {
 };
 
 export const createUser = async (req, res) => {
-    const { name, email, username, password } = req.body;
-
     try {
-        const existingUser = await User.findOne({
-            $or: [
-                { email },
-                { username }
-            ]
-        });
-
-        if (existingUser && existingUser.email === email) {
-            return errorResponse(res, 'Email address already exists', null, 400);
-        }else if(existingUser && existingUser.username === username){
-            return errorResponse(res, 'Username already exists', null, 400);
+        const { personalInfo, addressInfo, companyInfo, bankInfo } = req.body;
+        const mergedInfo = { ...personalInfo, ...addressInfo, ...companyInfo };
+        
+        let object1 = {
+            ...mergedInfo,
+            designation_id:mergedInfo.designation_id.value,
+            role_id:mergedInfo.role_id.value,
         }
+        const user = await new User(object1).save();
 
-        const newUser = new User({ name, email, username, password });
-        const savedUser = await newUser.save();
-        successResponse(res,savedUser);
+        let object2 = {
+            ...bankInfo,
+            user_id:user._id,
+            bank_id:bankInfo.bank_id.value,
+            account_type:bankInfo.account_type.value,
+        }
+        await new BankDetails(object2).save()
+        
+        successResponse(res, {}, 200, 'Employee Created Successfully');
     } catch (error) {
+        // console.log(error.message)
         errorResponse(res,process.env.ERROR_MSG,error,500);
     }
-};
+}
 
 export const updateProfile = async (req, res) => {
     try {
@@ -148,6 +150,30 @@ export const assignPermissions = async (req, res) => {
         }
 
         successResponse(res, {}, 200, 'Permissions assigned successfully');
+    } catch (error) {
+        // console.log(error.message)
+        errorResponse(res, process.env.ERROR_MSG, error, 500);
+    }
+}
+
+export const generateEmployeeCode = async (req, res) => {
+    try {
+        let { prefix } = req.query;
+
+        const user = await User.findOne({}, { employee_code: 1, _id: 0 }).sort({ createdAt: -1 }).lean(); 
+        let nextCode = `${prefix}0001`;
+
+        if (user && user.employee_code) {
+            const regex = new RegExp(`^${prefix}(\\d+)$`);
+            const match = user.employee_code.match(regex);
+
+            if (match) {
+                const nextNumber = String(parseInt(match[1], 10) + 1).padStart(4, '0');
+                nextCode = `${prefix}${nextNumber}`;
+            }
+        }
+
+        successResponse(res, {emp_code: nextCode}, 200, '');
     } catch (error) {
         // console.log(error.message)
         errorResponse(res, process.env.ERROR_MSG, error, 500);

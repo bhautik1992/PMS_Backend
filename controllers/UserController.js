@@ -4,6 +4,7 @@ import Permissions from '../models/Permissions.js';
 import UserPermissions from '../models/UserPermissions.js';
 import { successResponse, errorResponse } from '../helpers/ResponseHandler.js';
 import { getPermissionsByRole } from '../helpers/Common.js';
+import { validateUniqueBankDetails } from './BankDetailsController.js';
 
 const selectFields = "first_name last_name middle_name username employee_code is_active";
 
@@ -20,7 +21,34 @@ export const createUser = async (req, res) => {
     try {
         const { personalInfo, addressInfo, companyInfo, bankInfo } = req.body;
         const mergedInfo = { ...personalInfo, ...addressInfo, ...companyInfo };
-        
+
+        // Check for users
+        const query1 = [];
+        if (mergedInfo?.username?.trim()) query1.push({ username: mergedInfo.username.trim() });
+        if (mergedInfo?.employee_code?.trim()) query1.push({ employee_code: mergedInfo.employee_code.trim() });
+        if (mergedInfo?.company_email?.trim()) query1.push({ company_email: mergedInfo.company_email.trim() });
+        if (mergedInfo?.personal_email?.trim()) query1.push({ personal_email: mergedInfo.personal_email.trim() });
+
+        const exiUser = query1.length > 0 ? await User.findOne({ $or: query1 }).lean() : null;        
+        let userError = await validateUniqueUsersDetails(exiUser,mergedInfo);
+        if(userError !== ''){
+            return errorResponse(res, userError, null, 404);
+        }
+        //
+
+        // Check for bank details
+        const query2 = [];
+        if (bankInfo?.account_number?.trim()) query2.push({ account_number: bankInfo.account_number.trim() });
+        if (bankInfo?.aadhar_card?.trim()) query2.push({ aadhar_card: bankInfo.aadhar_card.trim() });
+        if (bankInfo?.pan_card?.trim()) query2.push({ pan_card: bankInfo.pan_card.trim() });
+
+        const exiBankDetails = query2.length > 0 ? await BankDetails.findOne({ $or: query2 }).lean() : null;
+        let bankError = await validateUniqueBankDetails(exiBankDetails, bankInfo);
+        if(bankError !== ''){
+            return errorResponse(res, bankError, null, 404);
+        }
+        //
+
         let object1 = {
             ...mergedInfo,
             designation_id:mergedInfo.designation_id.value,
@@ -31,16 +59,34 @@ export const createUser = async (req, res) => {
         let object2 = {
             ...bankInfo,
             user_id:user._id,
-            bank_id:bankInfo.bank_id.value,
-            account_type:bankInfo.account_type.value,
+            bank_id:bankInfo?.bank_id?.value,
+            account_type:bankInfo?.account_type?.value || null,
         }
-        await new BankDetails(object2).save()
+        await new BankDetails(object2).save();
         
         successResponse(res, {}, 200, 'Employee Created Successfully');
     } catch (error) {
         // console.log(error.message)
         errorResponse(res,process.env.ERROR_MSG,error,500);
     }
+}
+
+export const validateUniqueUsersDetails = async (existingRecord, newRecord) => {
+    let errorMessage = "";
+
+    if (existingRecord) {
+        if (existingRecord.username === newRecord?.username?.trim()) {
+            errorMessage = 'User Name is already exists.';
+        } else if (existingRecord.employee_code === newRecord?.employee_code?.trim()) {
+            errorMessage = 'Employee Code is already exists.';
+        } else if (existingRecord.company_email === newRecord?.company_email?.trim()) {
+            errorMessage = 'Company Email is already exists.';
+        } else if (existingRecord.personal_email === newRecord?.personal_email?.trim()) {
+            errorMessage = 'Personal Email is already exists.';
+        }
+    }
+
+    return errorMessage;
 }
 
 export const updateProfile = async (req, res) => {

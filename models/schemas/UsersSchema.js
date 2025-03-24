@@ -7,12 +7,40 @@ const schema = new mongoose.Schema({
     first_name             : { type: String, required : true, maxLength: 30 },
     last_name              : { type: String, required : true, maxLength: 30 }, 
     middle_name            : { type: String, required : true, maxLength: 30 },
-    username               : { type: String, required : true, maxLength: 30, unique: true },
-    employee_code          : { type: String, required : true, maxLength: 6, unique: true },
+    username  : { 
+        type: String,
+        required : true, 
+        maxLength: 30, 
+        unique: true, 
+        sparse: true,
+        set: v => v === "" ? undefined : v
+    },
+    employee_code  : { 
+        type: String,
+        required : true, 
+        maxLength: 6, 
+        unique: true, 
+        sparse: true,
+        set: v => v === "" ? undefined : v
+    },
     password               : { type: String, default  : null, minLength: 8, maxLength: 12 },
     profile_photo          : { type: String, default  : null },
-    company_email          : { type: String, required : true, maxLength: 50, unique: true },
-    personal_email         : { type: String, required : true, maxLength: 50, unique: true },
+    company_email  : { 
+        type: String,
+        required : true, 
+        maxLength: 50, 
+        unique: true, 
+        sparse: true,
+        set: v => v === "" ? undefined : v
+    },
+    personal_email  : { 
+        type: String,
+        required : true, 
+        maxLength: 50, 
+        unique: true, 
+        sparse: true,
+        set: v => v === "" ? undefined : v
+    },
     designation_id         : { type: mongoose.Schema.Types.ObjectId,ref: 'Designation',required: true},
     permanent_address      : { type: String, required : true },
     temporary_address      : { type: String, default  : null },

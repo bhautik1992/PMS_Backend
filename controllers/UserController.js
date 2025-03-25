@@ -13,6 +13,7 @@ export const getUsers = async (req, res) => {
         const users = await User.find().select(selectFields);
         successResponse(res, users, 200, "Users Fetch Successfully");
     } catch (error) {
+         // console.log(error.message)
         errorResponse(res,process.env.ERROR_MSG,error,500);
     }
 };
@@ -110,7 +111,7 @@ export const updateProfile = async (req, res) => {
 
         successResponse(res, object, 200, "Profile Updated Successfully");
     } catch (error) {
-        console.log(error.message)
+        // console.log(error.message)
         errorResponse(res, process.env.ERROR_MSG, error, 500);
     }
 };
@@ -226,4 +227,80 @@ export const generateEmployeeCode = async (req, res) => {
     }
 }
 
+export const edit = async (req, res) => {
+    try{
+        const { id } = req.params;
+        
+        const user       = await User.findById(id);
+        const bankDetail = await BankDetails.findOne({'user_id':user._id});
+        
+        successResponse(res, {user, bank_detail: bankDetail}, 200, '');
+    } catch (error) {
+        // console.log(error.message);
+        errorResponse(res, process.env.ERROR_MSG, error, 500);
+    }
+}
 
+export const update = async (req, res) => {
+    try {
+        const { personalInfo, addressInfo, companyInfo, bankInfo, userId } = req.body;
+        const mergedInfo = { ...personalInfo, ...addressInfo, ...companyInfo };
+
+        // Check for users
+        const query1 = [];
+        if (mergedInfo?.username?.trim()) query1.push({ username: mergedInfo.username.trim() });
+        if (mergedInfo?.employee_code?.trim()) query1.push({ employee_code: mergedInfo.employee_code.trim() });
+        if (mergedInfo?.company_email?.trim()) query1.push({ company_email: mergedInfo.company_email.trim() });
+        if (mergedInfo?.personal_email?.trim()) query1.push({ personal_email: mergedInfo.personal_email.trim() });
+
+        const queryFilter1 = { $or: query1 };
+        if(userId) {
+            queryFilter1._id = { $ne: userId };
+        }
+
+        const exiUser = query1.length > 0 ? await User.findOne(queryFilter1).lean() : null;        
+        let userError = await validateUniqueUsersDetails(exiUser,mergedInfo);
+        if(userError !== ''){
+            return errorResponse(res, userError, null, 404);
+        }
+        //
+
+        // Check for bank details
+        const query2 = [];
+        if (bankInfo?.account_number?.trim()) query2.push({ account_number: bankInfo.account_number.trim() });
+        if (bankInfo?.aadhar_card?.trim()) query2.push({ aadhar_card: bankInfo.aadhar_card.trim() });
+        if (bankInfo?.pan_card?.trim()) query2.push({ pan_card: bankInfo.pan_card.trim() });
+
+        const queryFilter2 = { $or: query2 };
+        if(userId) {
+            queryFilter2.user_id = { $ne: userId };
+        }
+
+        const exiBankDetails = query2.length > 0 ? await BankDetails.findOne(queryFilter2).lean() : null;
+        let bankError = await validateUniqueBankDetails(exiBankDetails, bankInfo);
+        if(bankError !== ''){
+            return errorResponse(res, bankError, null, 404);
+        }
+        //
+
+        let object1 = {
+            ...mergedInfo,
+            designation_id:mergedInfo.designation_id.value,
+            role_id:mergedInfo.role_id.value,
+        }
+        await User.findByIdAndUpdate(userId, object1, { new: true });
+
+        let object2 = {
+            ...bankInfo,
+            user_id:userId,
+            bank_id:bankInfo?.bank_id?.value,
+            account_type:bankInfo?.account_type?.value || null,
+        }
+        await BankDetails.findOneAndUpdate({ user_id: userId },object2,{ new: true });
+
+        successResponse(res, {}, 200, 'Employee Updated Successfully');
+    } catch (error) {
+        // console.log(error.message)
+        errorResponse(res,process.env.ERROR_MSG,error,500);
+    }
+}

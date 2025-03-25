@@ -1,6 +1,6 @@
 import express from 'express';
 import { 
-    createUser, getUsers, 
+    createUser, getUsers, edit, update,
     updateProfile, changePassword, 
     getBankDetails, handleUserPermission, 
     assignPermissions, generateEmployeeCode 
@@ -11,6 +11,8 @@ import upload from '../../middleware/multer.js';
 const router = express.Router();
 
 router.route('/').get(protectRoute, getUsers).post(protectRoute, createUser);
+router.get('/edit/:id', protectRoute, edit);
+router.post('/update', protectRoute, update);
 
 router.post(
     "/profile/:userId", 

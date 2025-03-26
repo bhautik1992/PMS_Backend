@@ -90,4 +90,8 @@ export const getPermissionsLists = async (user_id,role_id) => {
     }
 };
 
-
+export const formatWord = async (string) => {
+    return await string.split('_')
+        .map(word => word.charAt(0).toUpperCase() + word.slice(1))
+        .join(' ');
+}

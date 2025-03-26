@@ -5,6 +5,7 @@ import UserPermissions from '../models/UserPermissions.js';
 import { successResponse, errorResponse } from '../helpers/ResponseHandler.js';
 import { getPermissionsByRole } from '../helpers/Common.js';
 import { validateUniqueBankDetails } from './BankDetailsController.js';
+import { formatWord } from '../helpers/Common.js';
 
 const selectFields = "first_name last_name middle_name username employee_code is_active";
 
@@ -30,7 +31,7 @@ export const createUser = async (req, res) => {
         if (mergedInfo?.company_email?.trim()) query1.push({ company_email: mergedInfo.company_email.trim() });
         if (mergedInfo?.personal_email?.trim()) query1.push({ personal_email: mergedInfo.personal_email.trim() });
 
-        const exiUser = query1.length > 0 ? await User.findOne({ $or: query1 }).lean() : null;        
+        const exiUser = query1.length > 0 ? await User.findOne({ $or: query1, deletedAt: null }).lean() : null;        
         let userError = await validateUniqueUsersDetails(exiUser,mergedInfo);
         if(userError !== ''){
             return errorResponse(res, userError, null, 404);
@@ -43,7 +44,7 @@ export const createUser = async (req, res) => {
         if (bankInfo?.aadhar_card?.trim()) query2.push({ aadhar_card: bankInfo.aadhar_card.trim() });
         if (bankInfo?.pan_card?.trim()) query2.push({ pan_card: bankInfo.pan_card.trim() });
 
-        const exiBankDetails = query2.length > 0 ? await BankDetails.findOne({ $or: query2 }).lean() : null;
+        const exiBankDetails = query2.length > 0 ? await BankDetails.findOne({ $or: query2, deletedAt: null }).lean() : null;
         let bankError = await validateUniqueBankDetails(exiBankDetails, bankInfo);
         if(bankError !== ''){
             return errorResponse(res, bankError, null, 404);
@@ -68,7 +69,13 @@ export const createUser = async (req, res) => {
         
         successResponse(res, {}, 200, 'Employee Created Successfully');
     } catch (error) {
-        // console.log(error.message)
+        if(error.code === 11000){
+            const field          = Object.keys(error.keyPattern)[0];
+            const formattedField = await formatWord(field);
+
+            return errorResponse(res, `${formattedField} already exists. Please use a different one.`, 400);
+        }
+
         errorResponse(res,process.env.ERROR_MSG,error,500);
     }
 }

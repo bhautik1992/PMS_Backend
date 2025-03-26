@@ -1,6 +1,6 @@
 import express from 'express';
 import { 
-    createUser, getUsers, edit, update,
+    createUser, getUsers, edit, update, destroy,
     updateProfile, changePassword, 
     getBankDetails, handleUserPermission, 
     assignPermissions, generateEmployeeCode 
@@ -13,6 +13,7 @@ const router = express.Router();
 router.route('/').get(protectRoute, getUsers).post(protectRoute, createUser);
 router.get('/edit/:id', protectRoute, edit);
 router.post('/update', protectRoute, update);
+router.post('/destroy', protectRoute, destroy);
 
 router.post(
     "/profile/:userId", 

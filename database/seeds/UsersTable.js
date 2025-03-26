@@ -22,6 +22,7 @@ export const usersTable = async () => {
             company_email          : 'bhautik.hailysoft@gmail.com',
             personal_email         : 'ajmera.bhautik@gmail.com',
             designation_id         :  designation._id,
+            shift_time             : 'first_shift',
             permanent_address      : 'Vandemataram Circle, Gota',
             temporary_address      :  null,
             mobile_number          : '9033357408',

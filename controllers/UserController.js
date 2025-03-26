@@ -10,7 +10,7 @@ const selectFields = "first_name last_name middle_name username employee_code is
 
 export const getUsers = async (req, res) => {
     try {
-        const users = await User.find().select(selectFields);
+        const users = await User.find().select(selectFields).sort({ _id: -1 });
         successResponse(res, users, 200, "Users Fetch Successfully");
     } catch (error) {
          // console.log(error.message)
@@ -52,6 +52,7 @@ export const createUser = async (req, res) => {
 
         let object1 = {
             ...mergedInfo,
+            shift_time:mergedInfo.shift_time.value,
             designation_id:mergedInfo.designation_id.value,
             role_id:mergedInfo.role_id.value,
         }
@@ -207,7 +208,7 @@ export const generateEmployeeCode = async (req, res) => {
     try {
         let { prefix } = req.query;
 
-        const user = await User.findOne({}, { employee_code: 1, _id: 0 }).sort({ createdAt: -1 }).lean(); 
+        const user = await User.findOneWithDeleted({}, { employee_code: 1, _id: 0 }).sort({ createdAt: -1 }).lean();
         let nextCode = `${prefix}0001`;
 
         if (user && user.employee_code) {
@@ -285,6 +286,7 @@ export const update = async (req, res) => {
 
         let object1 = {
             ...mergedInfo,
+            shift_time:mergedInfo.shift_time.value,
             designation_id:mergedInfo.designation_id.value,
             role_id:mergedInfo.role_id.value,
         }
@@ -304,3 +306,18 @@ export const update = async (req, res) => {
         errorResponse(res,process.env.ERROR_MSG,error,500);
     }
 }
+
+export const destroy = async (req, res) => {
+    try {
+        const { id } = req.body;
+        
+        await User.delete({_id:id})
+        await BankDetails.delete({'user_id':id})
+        successResponse(res, {}, 200, "Employee Deleted Successfully");
+    }catch(error){
+        // error.message
+        errorResponse(res, process.env.ERROR_MSG, error, 500);
+    }
+}
+
+

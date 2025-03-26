@@ -7,12 +7,15 @@ import { getPermissionsByRole } from '../helpers/Common.js';
 import { validateUniqueBankDetails } from './BankDetailsController.js';
 import { formatWord } from '../helpers/Common.js';
 
-const selectFields = "first_name last_name middle_name username employee_code is_active";
-
 export const getUsers = async (req, res) => {
     try {
-        const users = await User.find().select(selectFields).sort({ _id: -1 });
-        successResponse(res, users, 200, "Users Fetch Successfully");
+        const users = await User.find()
+            .populate({ path: "role_id", select: "name" })
+            .populate({ path: "designation_id", select: "name" })
+            .select("first_name last_name middle_name username employee_code company_email mobile_number city is_active")
+            .sort({ _id: -1 })
+
+        successResponse(res, users, 200, "Collaborator Fetch Successfully");
     } catch (error) {
          // console.log(error.message)
         errorResponse(res,process.env.ERROR_MSG,error,500);
@@ -67,7 +70,7 @@ export const createUser = async (req, res) => {
         }
         await new BankDetails(object2).save();
         
-        successResponse(res, {}, 200, 'Employee Created Successfully');
+        successResponse(res, {}, 200, 'Collaborator Created Successfully');
     } catch (error) {
         if(error.code === 11000){
             const field          = Object.keys(error.keyPattern)[0];
@@ -87,7 +90,7 @@ export const validateUniqueUsersDetails = async (existingRecord, newRecord) => {
         if (existingRecord.username === newRecord?.username?.trim()) {
             errorMessage = 'User Name is already exists.';
         } else if (existingRecord.employee_code === newRecord?.employee_code?.trim()) {
-            errorMessage = 'Employee Code is already exists.';
+            errorMessage = 'Collaborator Code is already exists.';
         } else if (existingRecord.company_email === newRecord?.company_email?.trim()) {
             errorMessage = 'Company Email is already exists.';
         } else if (existingRecord.personal_email === newRecord?.personal_email?.trim()) {
@@ -111,7 +114,7 @@ export const updateProfile = async (req, res) => {
 
         const updatedUser = await User.findByIdAndUpdate(userId, updateData, { new: true });
         if (!updatedUser) {
-            return errorResponse(res, "User not found!", null, 404);
+            return errorResponse(res, "Collaborator not found!", null, 404);
         }
 
         const object  = updatedUser.toObject();
@@ -131,7 +134,7 @@ export const changePassword = async (req, res) => {
         
         const updatedUser = await User.findByIdAndUpdate(userId, updateData, { new: true });
         if(!updatedUser){
-            return errorResponse(res, "User not found!", null, 404);
+            return errorResponse(res, "Collaborator not found!", null, 404);
         }
         
         successResponse(res, {}, 200, "Password Updated Successfully");
@@ -293,23 +296,23 @@ export const update = async (req, res) => {
 
         let object1 = {
             ...mergedInfo,
-            shift_time:mergedInfo.shift_time.value,
-            designation_id:mergedInfo.designation_id.value,
-            role_id:mergedInfo.role_id.value,
+            ...(mergedInfo.shift_time?.value && { shift_time: mergedInfo.shift_time.value }),
+            ...(mergedInfo.designation_id?.value && { designation_id: mergedInfo.designation_id.value }),
+            ...(mergedInfo.role_id?.value && { role_id: mergedInfo.role_id.value }),
         }
         await User.findByIdAndUpdate(userId, object1, { new: true });
 
         let object2 = {
             ...bankInfo,
             user_id:userId,
-            bank_id:bankInfo?.bank_id?.value,
-            account_type:bankInfo?.account_type?.value || null,
+            ...(bankInfo?.bank_id?.value && { bank_id: bankInfo.bank_id.value }),
+            ...(bankInfo?.account_type?.value && { account_type: bankInfo.account_type.value }),
         }
         await BankDetails.findOneAndUpdate({ user_id: userId },object2,{ new: true });
 
-        successResponse(res, {}, 200, 'Employee Updated Successfully');
+        successResponse(res, {}, 200, 'Collaborator Updated Successfully');
     } catch (error) {
-        // console.log(error.message)
+        console.log(error.message)
         errorResponse(res,process.env.ERROR_MSG,error,500);
     }
 }
@@ -320,7 +323,7 @@ export const destroy = async (req, res) => {
         
         await User.delete({_id:id})
         await BankDetails.delete({'user_id':id})
-        successResponse(res, {}, 200, "Employee Deleted Successfully");
+        successResponse(res, {}, 200, "Collaborator Deleted Successfully");
     }catch(error){
         // error.message
         errorResponse(res, process.env.ERROR_MSG, error, 500);

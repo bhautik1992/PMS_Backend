@@ -8,8 +8,26 @@ const schema = new mongoose.Schema({
     },
     type: { 
         type: String, 
-        enum: ['hourly', 'fixed-cost'], 
+        enum: ['hourly', 'fixed-cost', 'monthly'], 
         required: true 
+    },
+    price: {
+        type: Number,
+        required: true
+    },
+    currency: { 
+        type: String, 
+        enum: ['usd', 'gbp', 'eur'], 
+        required: true 
+    },
+    billing_cycle: { 
+        type: String, 
+        enum: ['weekly', 'monthly'], 
+        required: true 
+    },
+    technology: {
+        type: [String], 
+        required: true
     },
     start_date: {
         type: Date,
@@ -17,13 +35,17 @@ const schema = new mongoose.Schema({
     },
     end_date: {
         type: Date,
-        required: true,
+        default:null
     },
     users_id: [{ 
         type: mongoose.Schema.Types.ObjectId, 
         ref: "User", 
         required: true 
     }],
+    description: {
+        type: String, 
+        default: null,
+    },
     status:{
         type: String,
         enum: ['active', 'hold', 'closed'],

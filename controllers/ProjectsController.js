@@ -27,8 +27,10 @@ export const create = async (req, res) => {
         
         let data = {
             ...req.body,
-            type:req.body.type.value,
+            billing_cycle:req.body.billing_cycle.value,
+            currency:req.body.currency.value,
             status:req.body.status.value,
+            type:req.body.type.value,
             users_id: modifiedUser
         }
 

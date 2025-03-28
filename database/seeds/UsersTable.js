@@ -15,6 +15,7 @@ export const usersTable = async () => {
             first_name             : 'Bhautik',
             last_name              : 'Ajmera',
             middle_name            : 'Shaileshbhai',
+            birth_date             : new Date(),
             username               : 'bhautik1992',
             employee_code          : 'HS0001',
             password               : 'Bhautik1992!',

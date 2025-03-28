@@ -46,6 +46,11 @@ const schema = new mongoose.Schema({
         type: String, 
         default: null,
     },
+    client_id: { 
+        type: mongoose.Schema.Types.ObjectId, 
+        ref: "Clients", 
+        required: true
+    },
     status:{
         type: String,
         enum: ['active', 'hold', 'closed'],

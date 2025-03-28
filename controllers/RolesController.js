@@ -28,7 +28,7 @@ export const index = async (req, res) => {
         const total = await Roles.countDocuments(query);
         successResponse(res, { roles, total });
     } catch (error) {
-        console.log(error.message)
+        // console.log(error.message)
         errorResponse(res, process.env.ERROR_MSG, error, 500);
     }
 };

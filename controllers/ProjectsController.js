@@ -27,17 +27,52 @@ export const create = async (req, res) => {
         
         let data = {
             ...req.body,
-            billing_cycle:req.body.billing_cycle.value,
-            currency:req.body.currency.value,
-            status:req.body.status.value,
             type:req.body.type.value,
-            users_id: modifiedUser
+            currency:req.body.currency.value,
+            billing_cycle:req.body.billing_cycle.value,
+            users_id: modifiedUser,
+            client_id:req.body.client_id.value,
+            status:req.body.status.value,
         }
 
         const project = new Projects(data);
         await project.save();
         
         successResponse(res, {}, 200, "Project Created Successfully");
+    } catch (error) {
+        // console.log(error.message)
+        errorResponse(res, process.env.ERROR_MSG, error, 500);
+    }
+}
+
+export const edit = async (req, res) => {
+    try{
+        const { id } = req.params;
+        
+        const project = await Projects.findById(id);
+        successResponse(res, project, 200, '');
+    } catch (error) {
+        // console.log(error.message);
+        errorResponse(res, process.env.ERROR_MSG, error, 500);
+    }
+}
+
+export const update = async (req, res) => {
+    try {
+        const modifiedUser = req.body.users_id.map(({ value }) => ( value ));
+        
+        let data = {
+            ...req.body,
+            type:req.body.type.value,
+            currency:req.body.currency.value,
+            billing_cycle:req.body.billing_cycle.value,
+            users_id: modifiedUser,
+            client_id:req.body.client_id.value,
+            status:req.body.status.value,
+        }
+
+        await Projects.findByIdAndUpdate(req.body._id, data, { new: true });        
+        successResponse(res, {}, 200, "Project Updated Successfully");
     } catch (error) {
         // console.log(error.message)
         errorResponse(res, process.env.ERROR_MSG, error, 500);

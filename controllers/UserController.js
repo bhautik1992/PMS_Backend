@@ -7,6 +7,7 @@ import { getPermissionsByRole } from '../helpers/Common.js';
 import { validateUniqueBankDetails } from './BankDetailsController.js';
 import { formatWord } from '../helpers/Common.js';
 import mongoose from 'mongoose';
+import moment from 'moment';
 
 export const getUsers = async (req, res) => {
     try {
@@ -57,17 +58,18 @@ export const createUser = async (req, res) => {
 
         let object1 = {
             ...mergedInfo,
-            shift_time:mergedInfo.shift_time.value,
-            designation_id:mergedInfo.designation_id.value,
-            role_id:mergedInfo.role_id.value,
+            shift_time    : mergedInfo.shift_time.value,
+            designation_id: mergedInfo.designation_id.value,
+            role_id       : mergedInfo.role_id.value,
+            birth_date    : moment(mergedInfo.birth_date, "DD-MM-YYYY").format("YYYY-MM-DD")
         }
         const user = await new User(object1).save();
 
         let object2 = {
             ...bankInfo,
-            user_id:user._id,
-            bank_id:bankInfo?.bank_id?.value,
-            account_type:bankInfo?.account_type?.value || null,
+            user_id     : user._id,
+            bank_id     : bankInfo?.bank_id?.value,
+            account_type: bankInfo?.account_type?.value || null,
         }
         await new BankDetails(object2).save();
         
@@ -307,6 +309,7 @@ export const update = async (req, res) => {
             ...(mergedInfo.shift_time?.value && { shift_time: mergedInfo.shift_time.value }),
             ...(mergedInfo.designation_id?.value && { designation_id: mergedInfo.designation_id.value }),
             ...(mergedInfo.role_id?.value && { role_id: mergedInfo.role_id.value }),
+            ...(mergedInfo.birth_date && { birth_date: moment(mergedInfo.birth_date, "DD-MM-YYYY").format("YYYY-MM-DD") }),
         }
         await User.findByIdAndUpdate(userId, object1, { new: true });
 
@@ -316,11 +319,18 @@ export const update = async (req, res) => {
             ...(bankInfo?.bank_id?.value && { bank_id: bankInfo.bank_id.value }),
             ...(bankInfo?.account_type?.value && { account_type: bankInfo.account_type.value }),
         }
+        
+        Object.keys(object2).forEach(key => {
+            if (object2[key] === '') {
+                delete object2[key];
+            }
+        });
+
         await BankDetails.findOneAndUpdate({ user_id: userId },object2,{ new: true });
 
         return successResponse(res, {}, 200, 'Collaborator Updated Successfully');
     } catch (error) {
-        console.log(error.message)
+        // console.log(error.message)
         return errorResponse(res,process.env.ERROR_MSG,error,500);
     }
 }

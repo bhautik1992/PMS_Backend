@@ -7,6 +7,10 @@ const schema = new mongoose.Schema({
     first_name             : { type: String, required : true, maxLength: 30 },
     last_name              : { type: String, required : true, maxLength: 30 }, 
     middle_name            : { type: String, required : true, maxLength: 30 },
+    birth_date: {
+        type: Date,
+        required: true,
+    },
     username  : { 
         type: String,
         required : true, 

@@ -13,7 +13,7 @@ export const getPermissionsByRole = async (role_id) => {
         return await RolePermissions.find({ role_id }).select('_id role_id permission_id');
     } catch (error) {
         // console.log(error.message)
-        errorResponse(res, process.env.ERROR_MSG, error, 500);
+        return errorResponse(res, process.env.ERROR_MSG, error, 500);
     }
 }
 
@@ -86,7 +86,7 @@ export const getPermissionsLists = async (user_id,role_id) => {
         return result.length ? result[0].list : [];
     } catch (error) {
         // console.log(error.message)
-        errorResponse(res, process.env.ERROR_MSG, error, 500);
+        return errorResponse(res, process.env.ERROR_MSG, error, 500);
     }
 };
 

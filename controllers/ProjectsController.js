@@ -1,5 +1,6 @@
 import Projects from '../models/Projects.js';
 import { successResponse, errorResponse } from '../helpers/ResponseHandler.js';
+import mongoose from 'mongoose';
 
 export const index = async (req, res) => {
     try {
@@ -14,10 +15,10 @@ export const index = async (req, res) => {
             projects = await Projects.find().sort({ _id: -1 });
         }
 
-        successResponse(res,projects);
+        return successResponse(res,projects);
     } catch (error) {
         // console.log(error.message)
-        errorResponse(res,process.env.ERROR_MSG,error,500);
+        return errorResponse(res,process.env.ERROR_MSG,error,500);
     }
 }
 
@@ -38,10 +39,10 @@ export const create = async (req, res) => {
         const project = new Projects(data);
         await project.save();
         
-        successResponse(res, {}, 200, "Project Created Successfully");
+        return successResponse(res, {}, 200, "Project Created Successfully");
     } catch (error) {
         // console.log(error.message)
-        errorResponse(res, process.env.ERROR_MSG, error, 500);
+        return errorResponse(res, process.env.ERROR_MSG, error, 500);
     }
 }
 
@@ -49,11 +50,19 @@ export const edit = async (req, res) => {
     try{
         const { id } = req.params;
         
+        if(!mongoose.Types.ObjectId.isValid(id)){
+            return errorResponse(res, process.env.NO_RECORD, null, 400);
+        }
+
         const project = await Projects.findById(id);
-        successResponse(res, project, 200, '');
+        if(!project){
+            return errorResponse(res, process.env.NO_RECORD, null, 404);
+        }
+
+        return successResponse(res, project, 200, '');
     } catch (error) {
         // console.log(error.message);
-        errorResponse(res, process.env.ERROR_MSG, error, 500);
+        return errorResponse(res, process.env.ERROR_MSG, error, 500);
     }
 }
 
@@ -72,10 +81,10 @@ export const update = async (req, res) => {
         }
 
         await Projects.findByIdAndUpdate(req.body._id, data, { new: true });        
-        successResponse(res, {}, 200, "Project Updated Successfully");
+        return successResponse(res, {}, 200, "Project Updated Successfully");
     } catch (error) {
         // console.log(error.message)
-        errorResponse(res, process.env.ERROR_MSG, error, 500);
+        return errorResponse(res, process.env.ERROR_MSG, error, 500);
     }
 }
 

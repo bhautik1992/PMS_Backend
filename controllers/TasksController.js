@@ -108,9 +108,9 @@ export const index = async (req, res) => {
         ]);
 
         const total = await Tasks.countDocuments(query);
-        successResponse(res, { data: tasks, total });
+        return successResponse(res, { data: tasks, total });
     } catch (error) {
-        errorResponse(res, process.env.ERROR_MSG, error, 500);
+        return errorResponse(res, process.env.ERROR_MSG, error, 500);
     }
 };
 
@@ -125,10 +125,10 @@ export const create = async (req, res) => {
         const task = new Tasks(data);
         await task.save();
 
-        successResponse(res, {}, 200, "Task Created Successfully");
+        return successResponse(res, {}, 200, "Task Created Successfully");
     } catch (error) {
         // error.message
-        errorResponse(res, process.env.ERROR_MSG, error, 500);
+        return errorResponse(res, process.env.ERROR_MSG, error, 500);
     }
 }
 
@@ -137,10 +137,10 @@ export const destroy = async (req, res) => {
         const { id, deletedBy } = req.body;
         
         await Tasks.delete({_id:id},deletedBy)
-        successResponse(res, {}, 200, "Task Deleted Successfully");
+        return successResponse(res, {}, 200, "Task Deleted Successfully");
     }catch(error){
         // error.message
-        errorResponse(res, process.env.ERROR_MSG, error, 500);
+        return errorResponse(res, process.env.ERROR_MSG, error, 500);
     }
 }
 
@@ -148,15 +148,19 @@ export const edit = async (req, res) => {
     try{
         const { id } = req.params;
         
+        if(!mongoose.Types.ObjectId.isValid(id)){
+            return errorResponse(res, process.env.NO_RECORD, null, 400);
+        }
+
         const task = await Tasks.findById(id);
         if(!task) {
-            return errorResponse(res,'Task not found!', null, 404);
+            return errorResponse(res, process.env.NO_RECORD, null, 404);
         }
     
-        successResponse(res, task, 200, '');
+        return successResponse(res, task, 200, '');
     } catch (error) {
         // console.log(error.message);
-        errorResponse(res, process.env.ERROR_MSG, error, 500);
+        return errorResponse(res, process.env.ERROR_MSG, error, 500);
     }
 }
 
@@ -176,10 +180,10 @@ export const update = async (req, res) => {
             return errorResponse(res, "Task not found!", null, 404);
         }
 
-        successResponse(res, {}, 200, "Task Updated Successfully");
+        return successResponse(res, {}, 200, "Task Updated Successfully");
     } catch (error) {
         // error.message
-        errorResponse(res, process.env.ERROR_MSG, error, 500);
+        return errorResponse(res, process.env.ERROR_MSG, error, 500);
     }
 }
 

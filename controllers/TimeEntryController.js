@@ -10,10 +10,10 @@ export const create = async (req, res) => {
         const timeEntry = new TimeEntry(data);
         await timeEntry.save();
 
-        successResponse(res, {}, 200, "Time Entry Saved Successfully");
+        return successResponse(res, {}, 200, "Time Entry Saved Successfully");
     } catch (error) {
         // error.message
-        errorResponse(res, process.env.ERROR_MSG, error, 500);
+        return errorResponse(res, process.env.ERROR_MSG, error, 500);
     }
 }
 

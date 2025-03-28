@@ -4,10 +4,10 @@ import { successResponse, errorResponse } from '../helpers/ResponseHandler.js';
 export const getSettings = async (req, res) => {
     try {
         const settings = await Settings.findOne();
-        successResponse(res, settings, 200, "Settings Fetch Successfully");
+        return successResponse(res, settings, 200, "Settings Fetch Successfully");
     } catch (error) {
         // error.message
-        errorResponse(res,process.env.ERROR_MSG,error,500);
+        return errorResponse(res,process.env.ERROR_MSG,error,500);
     }
 }
 
@@ -23,10 +23,10 @@ export const saveSettings = async (req, res) => {
             await settings.save();
         }
 
-        successResponse(res, settings, 200, "Settings Saved Successfully");
+        return successResponse(res, settings, 200, "Settings Saved Successfully");
     } catch (error) {
         // error.message
-        errorResponse(res, process.env.ERROR_MSG, error, 500);
+        return errorResponse(res, process.env.ERROR_MSG, error, 500);
     }
 }
 

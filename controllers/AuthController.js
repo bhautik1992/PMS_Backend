@@ -41,10 +41,10 @@ export const login = async (req, res) => {
             permissions,
             settings,
         });        
-        // successResponse(res, object, 200, 'Loggedin successfully.');
+        // return successResponse(res, object, 200, 'Loggedin successfully.');
     } catch (error) {
         // console.log(error.message);
-        errorResponse(res, 'Error during login', error, 500);
+        return errorResponse(res, 'Error during login', error, 500);
     }
 };
 

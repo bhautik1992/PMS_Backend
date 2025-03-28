@@ -1,5 +1,6 @@
 import Roles from '../models/Roles.js';
 import { successResponse, errorResponse } from '../helpers/ResponseHandler.js';
+import mongoose from 'mongoose';
 
 export const index = async (req, res) => {
     try {
@@ -26,10 +27,10 @@ export const index = async (req, res) => {
         ]);
 
         const total = await Roles.countDocuments(query);
-        successResponse(res, { roles, total });
+        return successResponse(res, { roles, total });
     } catch (error) {
         // console.log(error.message)
-        errorResponse(res, process.env.ERROR_MSG, error, 500);
+        return errorResponse(res, process.env.ERROR_MSG, error, 500);
     }
 };
 
@@ -60,10 +61,10 @@ export const create = async (req, res) => {
             await role.save();
         }
 
-        successResponse(res, {}, 200, message);
+        return successResponse(res, {}, 200, message);
     } catch (error) {
         // console.log(error.message)
-        errorResponse(res, process.env.ERROR_MSG, error, 500);
+        return errorResponse(res, process.env.ERROR_MSG, error, 500);
     }
 }
 
@@ -71,15 +72,19 @@ export const edit = async (req, res) => {
     try{
         const { id } = req.params;
         
+        if(!mongoose.Types.ObjectId.isValid(id)){
+            return errorResponse(res, process.env.NO_RECORD, null, 400);
+        }
+
         const role = await Roles.findById(id);
         if(!role) {
-            return errorResponse(res,'Role not found!', null, 404);
+            return errorResponse(res, process.env.NO_RECORD, null, 404);
         }
     
-        successResponse(res, role, 200, '');
+        return successResponse(res, role, 200, '');
     } catch (error) {
         // console.log(error.message);
-        errorResponse(res, process.env.ERROR_MSG, error, 500);
+        return errorResponse(res, process.env.ERROR_MSG, error, 500);
     }
 }
 
@@ -88,10 +93,10 @@ export const destroy = async (req, res) => {
         const { id } = req.body;
         
         await Roles.delete({_id:id})
-        successResponse(res, {}, 200, "Role Deleted Successfully");
+        return successResponse(res, {}, 200, "Role Deleted Successfully");
     }catch(error){
         // error.message
-        errorResponse(res, process.env.ERROR_MSG, error, 500);
+        return errorResponse(res, process.env.ERROR_MSG, error, 500);
     }
 }
 

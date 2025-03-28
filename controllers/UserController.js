@@ -6,6 +6,7 @@ import { successResponse, errorResponse } from '../helpers/ResponseHandler.js';
 import { getPermissionsByRole } from '../helpers/Common.js';
 import { validateUniqueBankDetails } from './BankDetailsController.js';
 import { formatWord } from '../helpers/Common.js';
+import mongoose from 'mongoose';
 
 export const getUsers = async (req, res) => {
     try {
@@ -15,10 +16,10 @@ export const getUsers = async (req, res) => {
             .select("first_name last_name middle_name username employee_code company_email mobile_number city is_active")
             .sort({ _id: -1 })
 
-        successResponse(res, users, 200, "Collaborator Fetch Successfully");
+        return successResponse(res, users, 200, "Collaborator Fetch Successfully");
     } catch (error) {
          // console.log(error.message)
-        errorResponse(res,process.env.ERROR_MSG,error,500);
+        return errorResponse(res,process.env.ERROR_MSG,error,500);
     }
 };
 
@@ -70,7 +71,7 @@ export const createUser = async (req, res) => {
         }
         await new BankDetails(object2).save();
         
-        successResponse(res, {}, 200, 'Collaborator Created Successfully');
+        return successResponse(res, {}, 200, 'Collaborator Created Successfully');
     } catch (error) {
         if(error.code === 11000){
             const field          = Object.keys(error.keyPattern)[0];
@@ -79,7 +80,7 @@ export const createUser = async (req, res) => {
             return errorResponse(res, `${formattedField} already exists. Please use a different one.`, 400);
         }
 
-        errorResponse(res,process.env.ERROR_MSG,error,500);
+        return errorResponse(res,process.env.ERROR_MSG,error,500);
     }
 }
 
@@ -120,10 +121,10 @@ export const updateProfile = async (req, res) => {
         const object  = updatedUser.toObject();
         delete object.password;
 
-        successResponse(res, object, 200, "Profile Updated Successfully");
+        return successResponse(res, object, 200, "Profile Updated Successfully");
     } catch (error) {
         // console.log(error.message)
-        errorResponse(res, process.env.ERROR_MSG, error, 500);
+        return errorResponse(res, process.env.ERROR_MSG, error, 500);
     }
 };
 
@@ -137,7 +138,7 @@ export const changePassword = async (req, res) => {
             return errorResponse(res, "Collaborator not found!", null, 404);
         }
         
-        successResponse(res, {}, 200, "Password Updated Successfully");
+        return successResponse(res, {}, 200, "Password Updated Successfully");
     } catch (error) {
         // error.message
         if (error.message === "User not found!") {
@@ -148,7 +149,7 @@ export const changePassword = async (req, res) => {
             return errorResponse(res, "Current password is incorrect.", null, 400);
         }
 
-        errorResponse(res, process.env.ERROR_MSG, error, 500);
+        return errorResponse(res, process.env.ERROR_MSG, error, 500);
     }
 };
 
@@ -161,10 +162,10 @@ export const getBankDetails = async (req, res) => {
             return errorResponse(res, "Bank details not found!", null, 404);
         }
         
-        successResponse(res, bankDetail, 200, "Bank details fetch successfully");
+        return successResponse(res, bankDetail, 200, "Bank details fetch successfully");
     }catch(error){
         // error.message
-        errorResponse(res, process.env.ERROR_MSG, error, 500);
+        return errorResponse(res, process.env.ERROR_MSG, error, 500);
     }
 }
 
@@ -177,10 +178,10 @@ export const handleUserPermission = async (req, res) => {
         const rolePermissions = await getPermissionsByRole(user.role_id);
         const userPermissions = await UserPermissions.find({user_id: userId});
 
-        successResponse(res, { permissions, role_permissions:  rolePermissions, user_permissions: userPermissions, user_id: userId});
+        return successResponse(res, { permissions, role_permissions:  rolePermissions, user_permissions: userPermissions, user_id: userId});
     }catch(error){
         // error.message
-        errorResponse(res, process.env.ERROR_MSG, error, 500);
+        return errorResponse(res, process.env.ERROR_MSG, error, 500);
     }
 }
 
@@ -207,10 +208,10 @@ export const assignPermissions = async (req, res) => {
             await UserPermissions.delete({ user_id: userId, permission_id: { $in: permissionsToRemove } });
         }
 
-        successResponse(res, {}, 200, 'Permissions assigned successfully');
+        return successResponse(res, {}, 200, 'Permissions assigned successfully');
     } catch (error) {
         // console.log(error.message)
-        errorResponse(res, process.env.ERROR_MSG, error, 500);
+        return errorResponse(res, process.env.ERROR_MSG, error, 500);
     }
 }
 
@@ -231,10 +232,10 @@ export const generateEmployeeCode = async (req, res) => {
             }
         }
 
-        successResponse(res, {emp_code: nextCode}, 200, '');
+        return successResponse(res, {emp_code: nextCode}, 200, '');
     } catch (error) {
         // console.log(error.message)
-        errorResponse(res, process.env.ERROR_MSG, error, 500);
+        return errorResponse(res, process.env.ERROR_MSG, error, 500);
     }
 }
 
@@ -242,13 +243,20 @@ export const edit = async (req, res) => {
     try{
         const { id } = req.params;
         
-        const user       = await User.findById(id);
+        if(!mongoose.Types.ObjectId.isValid(id)){
+            return errorResponse(res, process.env.NO_RECORD, null, 400);
+        }
+
+        const user = await User.findById(id);
+        if(!user) {
+            return errorResponse(res, process.env.NO_RECORD, null, 404);
+        }
+
         const bankDetail = await BankDetails.findOne({'user_id':user._id});
-        
-        successResponse(res, {user, bank_detail: bankDetail}, 200, '');
+        return successResponse(res, {user, bank_detail: bankDetail}, 200, '');
     } catch (error) {
         // console.log(error.message);
-        errorResponse(res, process.env.ERROR_MSG, error, 500);
+        return errorResponse(res, process.env.ERROR_MSG, error, 500);
     }
 }
 
@@ -310,10 +318,10 @@ export const update = async (req, res) => {
         }
         await BankDetails.findOneAndUpdate({ user_id: userId },object2,{ new: true });
 
-        successResponse(res, {}, 200, 'Collaborator Updated Successfully');
+        return successResponse(res, {}, 200, 'Collaborator Updated Successfully');
     } catch (error) {
         console.log(error.message)
-        errorResponse(res,process.env.ERROR_MSG,error,500);
+        return errorResponse(res,process.env.ERROR_MSG,error,500);
     }
 }
 
@@ -323,10 +331,10 @@ export const destroy = async (req, res) => {
         
         await User.delete({_id:id})
         await BankDetails.delete({'user_id':id})
-        successResponse(res, {}, 200, "Collaborator Deleted Successfully");
+        return successResponse(res, {}, 200, "Collaborator Deleted Successfully");
     }catch(error){
         // error.message
-        errorResponse(res, process.env.ERROR_MSG, error, 500);
+        return errorResponse(res, process.env.ERROR_MSG, error, 500);
     }
 }
 

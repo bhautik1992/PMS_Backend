@@ -1,6 +1,7 @@
 import Permissions from '../models/Permissions.js';
 import { getPermissionsByRole } from '../helpers/Common.js';
 import { successResponse, errorResponse } from '../helpers/ResponseHandler.js';
+import mongoose from 'mongoose';
 
 export const index = async (req, res) => {
     try {
@@ -28,10 +29,10 @@ export const index = async (req, res) => {
         ]);
 
         const total = await Permissions.countDocuments(query);
-        successResponse(res, { permissions, total });
+        return successResponse(res, { permissions, total });
     } catch (error) {
         // console.log(error.message)
-        errorResponse(res, process.env.ERROR_MSG, error, 500);
+        return errorResponse(res, process.env.ERROR_MSG, error, 500);
     }
 };
 
@@ -41,10 +42,10 @@ export const getAllPermissions = async (req, res) => {
 
         const permissions     = await Permissions.find().sort({ _id: -1 });
         const rolePermissions = await getPermissionsByRole(role_id);
-        successResponse(res, { permissions, role_permissions:  rolePermissions});
+        return successResponse(res, { permissions, role_permissions:  rolePermissions});
     } catch (error) {
         // console.log(error.message)
-        errorResponse(res, process.env.ERROR_MSG, error, 500);
+        return errorResponse(res, process.env.ERROR_MSG, error, 500);
     }
 }
 
@@ -74,10 +75,10 @@ export const create = async (req, res) => {
             await permission.save();
         }
 
-        successResponse(res, {}, 200, message);
+        return successResponse(res, {}, 200, message);
     } catch (error) {
         // console.log(error.message)
-        errorResponse(res, process.env.ERROR_MSG, error, 500);
+        return errorResponse(res, process.env.ERROR_MSG, error, 500);
     }
 }
 
@@ -85,15 +86,19 @@ export const edit = async (req, res) => {
     try{
         const { id } = req.params;
         
+        if(!mongoose.Types.ObjectId.isValid(id)){
+            return errorResponse(res, process.env.NO_RECORD, null, 400);
+        }
+
         const permission = await Permissions.findById(id);
         if(!permission) {
-            return errorResponse(res,'Permission not found!', null, 404);
+            return errorResponse(res, process.env.NO_RECORD, null, 404);
         }
     
-        successResponse(res, permission, 200, '');
+        return successResponse(res, permission, 200, '');
     } catch (error) {
         // console.log(error.message);
-        errorResponse(res, process.env.ERROR_MSG, error, 500);
+        return errorResponse(res, process.env.ERROR_MSG, error, 500);
     }
 }
 
@@ -102,10 +107,10 @@ export const destroy = async (req, res) => {
         const { id } = req.body;
         
         await Permissions.delete({_id:id})
-        successResponse(res, {}, 200, "Permission Deleted Successfully");
+        return successResponse(res, {}, 200, "Permission Deleted Successfully");
     }catch(error){
         // error.message
-        errorResponse(res, process.env.ERROR_MSG, error, 500);
+        return errorResponse(res, process.env.ERROR_MSG, error, 500);
     }
 }
 

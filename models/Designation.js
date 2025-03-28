@@ -1,5 +1,5 @@
 import mongoose from 'mongoose';
-import schema from './schemas/DesignationSchema.js';
+import schema from '../database/schemas/DesignationSchema.js';
 
 const Designation = mongoose.model('Designation',schema);
 

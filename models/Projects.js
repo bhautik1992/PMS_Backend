@@ -1,5 +1,5 @@
 import mongoose from 'mongoose';
-import schema from './schemas/ProjectsSchema.js';
+import schema from '../database/schemas/ProjectsSchema.js';
 
 const Projects = mongoose.model('Projects',schema);
 

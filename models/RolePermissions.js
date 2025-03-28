@@ -1,5 +1,5 @@
 import mongoose from 'mongoose';
-import schema from './schemas/RolePermissionsSchema.js';
+import schema from '../database/schemas/RolePermissionsSchema.js';
 
 const RolePermissions = mongoose.model('RolePermissions',schema);
 

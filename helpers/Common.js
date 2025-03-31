@@ -95,3 +95,33 @@ export const formatWord = async (string) => {
         .map(word => word.charAt(0).toUpperCase() + word.slice(1))
         .join(' ');
 }
+
+export const generatePlainPassword = () => {
+    const length = 8; // Fixed base length to ensure final length doesn't exceed 12
+    const lowercase = "abcdefghijklmnopqrstuvwxyz";
+    const uppercase = "ABCDEFGHIJKLMNOPQRSTUVWXYZ";
+    const numbers = "0123456789";
+    const specialChars = "!@#$%^&*()-_=+<>?";
+
+    // Ensure at least one character from each required set
+    let password = "";
+    password += lowercase[Math.floor(Math.random() * lowercase.length)];
+    password += uppercase[Math.floor(Math.random() * uppercase.length)];
+    password += numbers[Math.floor(Math.random() * numbers.length)];
+    password += specialChars[Math.floor(Math.random() * specialChars.length)];
+
+    // Fill remaining characters with a mix of all sets
+    const allChars = lowercase + uppercase + numbers + specialChars;
+    while (password.length < length) {
+        password += allChars[Math.floor(Math.random() * allChars.length)];
+    }
+
+    // Shuffle the password to avoid predictable patterns
+    password = password.split("").sort(() => 0.5 - Math.random()).join("");
+
+    // Append last 2 digits of the current timestamp to ensure uniqueness
+    const timestamp = Date.now().toString().slice(-2); // Get last 2 digits
+    return password + timestamp; // Ensures final length is exactly 10 characters
+}
+
+

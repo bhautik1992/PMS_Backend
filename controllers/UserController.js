@@ -8,6 +8,8 @@ import { validateUniqueBankDetails } from './BankDetailsController.js';
 import { formatWord } from '../helpers/Common.js';
 import mongoose from 'mongoose';
 import moment from 'moment';
+import { passwordEmail } from '../helpers/SendEmail.js';
+import { generatePlainPassword } from '../helpers/Common.js';
 
 export const getUsers = async (req, res) => {
     try {
@@ -19,7 +21,7 @@ export const getUsers = async (req, res) => {
 
         return successResponse(res, users, 200, "Collaborator Fetch Successfully");
     } catch (error) {
-         // console.log(error.message)
+        // console.log(error.message)
         return errorResponse(res,process.env.ERROR_MSG,error,500);
     }
 };
@@ -56,12 +58,14 @@ export const createUser = async (req, res) => {
         }
         //
 
+        const plainPassword = generatePlainPassword();
         let object1 = {
             ...mergedInfo,
             shift_time    : mergedInfo.shift_time.value,
             designation_id: mergedInfo.designation_id.value,
             role_id       : mergedInfo.role_id.value,
-            birth_date    : moment(mergedInfo.birth_date, "DD-MM-YYYY").format("YYYY-MM-DD")
+            birth_date    : moment(mergedInfo.birth_date, "DD-MM-YYYY").format("YYYY-MM-DD"),
+            password      :plainPassword,
         }
         const user = await new User(object1).save();
 
@@ -73,6 +77,7 @@ export const createUser = async (req, res) => {
         }
         await new BankDetails(object2).save();
         
+        await passwordEmail(user,plainPassword);
         return successResponse(res, {}, 200, 'Collaborator Created Successfully');
     } catch (error) {
         if(error.code === 11000){

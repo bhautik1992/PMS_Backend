@@ -6,6 +6,16 @@ const schema = new mongoose.Schema({
         required: true, 
         maxLength: 6
     },
+    linkedin_url: { 
+        type: String, 
+        required: true, 
+        maxLength: 50
+    },
+    twitter_url: { 
+        type: String, 
+        required: true, 
+        maxLength: 50
+    },
     deletedAt: {
         type: Date,
         default: null
@@ -15,3 +25,5 @@ const schema = new mongoose.Schema({
 });
 
 export default schema;
+
+

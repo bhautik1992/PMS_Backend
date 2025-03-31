@@ -7,7 +7,9 @@ export const settingTable = async () => {
         await connectDB();
 
         const settingskDetails = [{
-            emp_code : 'HS',
+            emp_code    : 'HS',
+            linkedin_url: 'https://www.linkedin.com/in/your-profile',
+            twitter_url : 'https://twitter.com/your-username',
         }];
 
         for (const details of settingskDetails) {

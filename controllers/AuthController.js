@@ -11,7 +11,7 @@ export const login = async (req, res) => {
     const { company_email, password } = req.body;
     
     try {
-        const user = await User.findOne({ company_email }).select('-createdAt -updatedAt -deletedAt -deleted -__v');
+        const user = await User.findOne({ company_email }).select('-createdAt -updatedAt -deletedAt -deleted -__v').populate('role_id', 'name');
         if(!user) {
             return errorResponse(res,'User not found!', null, 404);
         }
@@ -28,7 +28,7 @@ export const login = async (req, res) => {
         const banks = await Banks.find().select('_id name').sort({ _id: -1 });
         const designation = await Designation.find({ name: { $ne: "CEO" } }).select('_id name').sort({ _id: -1 });
         const roles = await Roles.find({ name: { $ne: "Admin" } }).select('_id name').sort({ _id: -1 });
-        const permissions = await getPermissionsLists(user._id,user.role_id);
+        const permissions = await getPermissionsLists(user._id,user.role_id._id);
         const settings = await Settings.findOne().select('-createdAt -updatedAt -deletedAt -__v');
         
         return res.status(200).json({

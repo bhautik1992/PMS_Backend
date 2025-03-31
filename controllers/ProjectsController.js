@@ -88,4 +88,24 @@ export const update = async (req, res) => {
     }
 }
 
+export const duration = async (req, res) => {
+    try{
+        const { id } = req.params;
+        
+        if(!mongoose.Types.ObjectId.isValid(id)){
+            return errorResponse(res, process.env.NO_RECORD, null, 400);
+        }
+
+        const project = await Projects.findById(id).select('start_date end_date');
+        if(!project){
+            return errorResponse(res, process.env.NO_RECORD, null, 404);
+        }
+
+        return successResponse(res, project, 200, '');
+    } catch (error) {
+        // console.log(error.message);
+        return errorResponse(res, process.env.ERROR_MSG, error, 500);
+    }
+}
+
 

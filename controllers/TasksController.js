@@ -119,7 +119,9 @@ export const create = async (req, res) => {
         let data = {
             ...req.body,
             project_id:req.body.project.value,
-            user_id:req.body.user.value
+            user_id:req.body.user.value,
+            start_date:req.body.start_end_date[0],
+            end_date:req.body.start_end_date[1],
         }
 
         const task = new Tasks(data);
@@ -152,7 +154,7 @@ export const edit = async (req, res) => {
             return errorResponse(res, process.env.NO_RECORD, null, 400);
         }
 
-        const task = await Tasks.findById(id);
+        const task = await Tasks.findById(id).populate('project_id', 'start_date end_date');
         if(!task) {
             return errorResponse(res, process.env.NO_RECORD, null, 404);
         }
@@ -171,7 +173,9 @@ export const update = async (req, res) => {
         let data = {
             ...req.body,
             project_id:req.body.project.value,
-            user_id:req.body.user.value
+            user_id:req.body.user.value,
+            start_date:req.body.start_end_date[0],
+            end_date:req.body.start_end_date[1],
         }
         delete data.created_by
 

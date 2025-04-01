@@ -13,11 +13,51 @@ import { generatePlainPassword } from '../helpers/Common.js';
 
 export const getUsers = async (req, res) => {
     try {
-        const users = await User.find()
-            .populate({ path: "role_id", select: "name" })
-            .populate({ path: "designation_id", select: "name" })
-            .select("first_name last_name middle_name username employee_code company_email mobile_number city is_active")
-            .sort({ _id: -1 })
+        const users = await User.aggregate([
+            {
+                $lookup: {
+                    from: "roles",
+                    localField: "role_id",
+                    foreignField: "_id",
+                    as: "role"
+                }
+            },
+            { $unwind: "$role" },
+            {
+                $lookup: {
+                    from: "designations",
+                    localField: "designation_id",
+                    foreignField: "_id",
+                    as: "designation"
+                }
+            },
+            { $unwind: "$designation" },
+            {
+                $match: { "role.name": { $ne: "Admin" } }
+            },
+            {
+                $project: {
+                    first_name: 1,
+                    last_name: 1,
+                    middle_name: 1,
+                    username: 1,
+                    employee_code: 1,
+                    company_email: 1,
+                    mobile_number: 1,
+                    city: 1,
+                    is_active: 1,
+                    role_id: {
+                        _id: "$role._id",
+                        name: "$role.name"
+                    },
+                    designation_id: {
+                        _id: "$designation._id",
+                        name: "$designation.name"
+                    }
+                }
+            },
+            { $sort: { _id: -1 } }
+        ]);    
 
         return successResponse(res, users, 200, "Collaborator Fetch Successfully");
     } catch (error) {
@@ -77,7 +117,7 @@ export const createUser = async (req, res) => {
         }
         await new BankDetails(object2).save();
         
-        await passwordEmail(user,plainPassword);
+        process.env.APP_ENV == 'production' && await passwordEmail(user,plainPassword);
         return successResponse(res, {}, 200, 'Collaborator Created Successfully');
     } catch (error) {
         if(error.code === 11000){

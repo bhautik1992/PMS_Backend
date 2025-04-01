@@ -57,6 +57,8 @@ const schema = new mongoose.Schema({
     state                  : { type: String, required : true, maxLength: 20 },
     country                : { type: String, required : true, maxLength: 20 },
     is_active              : { type: Boolean, default : 1, description : '0 = In-Active, 1 = Active' },
+    reset_token            : { type: String, default: null, maxLength: 200 },
+    reset_token_expires    : { type: Date, default: null },
     deletedAt              : { type: Date, default: null},
 },{
     timestamps: true

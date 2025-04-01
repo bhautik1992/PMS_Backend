@@ -9,6 +9,7 @@ import Projects from './routes/Projects.js';
 import Tasks from './routes/Tasks.js';
 import TimeEntry from './routes/TimeEntry.js';
 import Clients from './routes/Clients.js';
+import { forgotPassword } from '../controllers/ForgotPasswordController.js';
 
 const router = express.Router();
 router.use('/login', Login);
@@ -21,6 +22,8 @@ router.use('/projects', Projects);
 router.use('/tasks', Tasks);
 router.use('/time_entry', TimeEntry);
 router.use('/clients', Clients);
+
+router.post('/forgot_password', forgotPassword);
 
 export default router;
 

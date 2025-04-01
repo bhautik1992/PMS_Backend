@@ -44,7 +44,7 @@ export const passwordEmail = async (user,plainPassword) => {
         }
 
         const mailOptions = {
-            from   : `"HR Team" <${process.env.MAIL_USERNAME}>`,
+            from   : `"HR Team" <${process.env.NO_REPLY}>`,
             to     : user.company_email,
             // to     : 'bhautik.hailysoft@gmail.com',
             subject: "Welcome Aboard! Your Account Details Inside 🎉",
@@ -70,5 +70,53 @@ export const passwordEmail = async (user,plainPassword) => {
         return false;
     }
 };
+
+export const resetLinkEmail = async (user,resetLink) => {
+    try {
+        const settings = await Settings.findOne().select('-createdAt -updatedAt -deletedAt -__v');
+
+        const emailTemplatePath = path.join(__dirname, '../email/forgot_password.html');
+        let emailTemplate = fs.readFileSync(path.join(emailTemplatePath), "utf8");
+        
+        const replacements         = {
+            "{{company_name}}"      : process.env.APP_NAME,
+            "{{employee_name}}"     : `${user.first_name} ${user.last_name}`,
+            "{{reset_password_url}}": `${resetLink}`,
+            "{{current_year}}"      : moment().format("YYYY"),
+            "{{linkedin_url}}"      : settings.linkedin_url,
+            "{{twitter_url}}"       : settings.twitter_url,
+        };
+
+        for (const key in replacements) {
+            emailTemplate = emailTemplate.replace(new RegExp(key, "g"), replacements[key]);
+        }
+
+        const mailOptions = {
+            from   : `"PMS" <${process.env.NO_REPLY}>`,
+            to     : user.company_email,
+            // to     : 'bhautik.hailysoft@gmail.com',
+            subject: "Password Reset Request",
+            html   : emailTemplate,
+            attachments: [
+                {
+                    filename: 'logo_name.png',
+                    path: path.join(__dirname, '../assets/images/logo/logo_name.png'),
+                    cid: 'logo_name'
+                }
+            ]
+        };
+
+        const info =  await transporter.sendMail(mailOptions);
+
+        // console.log("Email sent successfully!");
+        // console.log("Message ID:", info.messageId);
+        // console.log("Response:", info.response);
+
+        return true;
+    } catch (error) {
+        // console.log(error.message)
+        return false;
+    }
+}
 
 

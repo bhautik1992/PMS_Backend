@@ -1,4 +1,5 @@
 import mongoose from 'mongoose';
+import mongooseDelete from "mongoose-delete";
 
 const schema = new mongoose.Schema({
     name: {
@@ -69,6 +70,12 @@ const schema = new mongoose.Schema({
 },{
     timestamps: true,
 })
+
+schema.plugin(mongooseDelete, { 
+    deletedAt: true, // Adds deletedAt field
+    overrideMethods: "all",  // Ensures soft-deleted records are hidden from normal queries
+    deletedBy: false, // Optionally store the user who deleted the record
+});
 
 export default schema;
 

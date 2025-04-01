@@ -29,6 +29,10 @@ const schema = new mongoose.Schema({
     description: {
         type: String, 
         required: false,
+    },
+    deletedAt: {
+        type: Date,
+        default: null
     }
 },{
     timestamps: true,
@@ -38,7 +42,7 @@ const schema = new mongoose.Schema({
 schema.plugin(mongooseDelete, { 
     deletedAt: true, // Adds deletedAt field
     overrideMethods: "all",  // Ensures soft-deleted records are hidden from normal queries
-    deletedBy: true, // Optionally store the user who deleted the record
+    deletedBy: false, // Optionally store the user who deleted the record
 });
 
 

@@ -10,6 +10,7 @@ import Tasks from './routes/Tasks.js';
 import TimeEntry from './routes/TimeEntry.js';
 import Clients from './routes/Clients.js';
 import { forgotPassword } from '../controllers/ForgotPasswordController.js';
+import { resetPassword } from '../controllers/ResetPasswordController.js';
 
 const router = express.Router();
 router.use('/login', Login);
@@ -24,6 +25,7 @@ router.use('/time_entry', TimeEntry);
 router.use('/clients', Clients);
 
 router.post('/forgot_password', forgotPassword);
+router.post('/reset_password', resetPassword);
 
 export default router;
 

@@ -11,7 +11,7 @@ export const forgotPassword = async (req, res) => {
             { company_email: email },
             {
               reset_token: crypto.randomBytes(32).toString("hex"),
-              reset_token_expires: Date.now() + 15 * 60 * 1000, // 15 minutes
+              reset_token_expires: Date.now() + 15 * 60 * 1000, // Store Expiry Of Current Time + 15 minutes
             },
             { new: true }
         );
@@ -21,7 +21,7 @@ export const forgotPassword = async (req, res) => {
         const resetLink = `${process.env.ALLOWED_ORIGIN}/reset_password?token=${user.reset_token}`;
         process.env.APP_ENV == 'production' && await resetLinkEmail(user,resetLink);
 
-        return successResponse(res, {}, 200, 'Password reset link successfully sent to your email');
+        return successResponse(res, {}, 200, "We've sent a password reset link to your email. Please use it within 15 minutes to reset your password.");
     }catch(error){
         // console.log(error.message);
         return errorResponse(res, process.env.ERROR_MSG, error, 500);

@@ -8,14 +8,14 @@ export const bankDetailsTable = async () => {
     try {
         await connectDB();
 
-        const user = await User.findOne({ company_email: "bhautik.hailysoft@gmail.com" });
+        const user = await User.findOne();
         if (!user) {
             console.error("User not found! Please run the user seeder first.");
             mongoose.connection.close();
             return;
         }
 
-        const bank = await Banks.findOne({ name: "HDFC" });
+        const bank = await Banks.findOne();
         if (!bank) {
             console.error("Bank not found! Please run the banks seeder first.");
             mongoose.connection.close();
@@ -25,11 +25,11 @@ export const bankDetailsTable = async () => {
         const defaultBankDetails = [{
             user_id        : user._id,
             bank_id        : bank._id,
-            account_number : "50100180248412",
-            ifsc_code      : "HDFC0001683",
-            branch_name    : "SAVARKUNDLA",
-            aadhar_card    : "550186424459",
-            pan_card       : "BCFPA7369L",
+            account_number : "12345678901234",
+            ifsc_code      : "HDFC0001111",
+            branch_name    : "AHMEDABAD",
+            aadhar_card    : "121212121212",
+            pan_card       : "ABCDE1234F",
         }];
 
         for (const bankData of defaultBankDetails) {

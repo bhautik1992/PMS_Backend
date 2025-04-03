@@ -7,10 +7,9 @@ export const clientsTable = async () => {
         await connectDB();
 
         const object = [{
-            first_name: 'Andrew',
-            last_name : 'Clark',
-            email     : 'andrew@gmail.com',
-            country   : 'USA',
+            first_name: 'Internal',
+            email     : 'internal.hailysoft@gmail.com',
+            country   : 'India',
         }];
 
         await Clients.insertMany(object);

@@ -33,9 +33,9 @@ export const getUsers = async (req, res) => {
                 }
             },
             { $unwind: "$designation" },
-            {
-                $match: { "role.name": { $ne: "Admin" } }
-            },
+            // {
+            //     $match: { "role.name": { $ne: "Admin" } }
+            // },
             {
                 $project: {
                     first_name: 1,

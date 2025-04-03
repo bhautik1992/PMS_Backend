@@ -26,8 +26,8 @@ export const login = async (req, res) => {
         delete object.password;
 
         const banks = await Banks.find().select('_id name').sort({ _id: -1 });
-        const designation = await Designation.find({ name: { $ne: "CEO" } }).select('_id name').sort({ _id: -1 });
-        const roles = await Roles.find({ name: { $ne: "Admin" } }).select('_id name').sort({ _id: -1 });
+        const designation = await Designation.find().select('_id name').sort({ _id: -1 });
+        const roles = await Roles.find().select('_id name').sort({ _id: -1 });
         const permissions = await getPermissionsLists(user._id,user.role_id._id);
         const settings = await Settings.findOne().select('-createdAt -updatedAt -deletedAt -__v');
         

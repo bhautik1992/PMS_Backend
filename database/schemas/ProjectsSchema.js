@@ -18,7 +18,7 @@ const schema = new mongoose.Schema({
     },
     currency: { 
         type: String, 
-        enum: ['usd', 'gbp', 'eur'], 
+        enum: ['usd', 'gbp', 'eur', 'inr'], 
         required: true 
     },
     billing_cycle: { 

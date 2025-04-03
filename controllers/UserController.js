@@ -1,6 +1,7 @@
 import User from '../models/User.js';
 import BankDetails from '../models/BankDetails.js';
 import Permissions from '../models/Permissions.js';
+import Settings from '../models/Settings.js';
 import UserPermissions from '../models/UserPermissions.js';
 import { successResponse, errorResponse } from '../helpers/ResponseHandler.js';
 import { getPermissionsByRole } from '../helpers/Common.js';
@@ -98,7 +99,9 @@ export const createUser = async (req, res) => {
         }
         //
 
+        const employee_code = await generateEmployeeCode();
         const plainPassword = generatePlainPassword();
+
         let object1 = {
             ...mergedInfo,
             shift_time    : mergedInfo.shift_time.value,
@@ -106,6 +109,7 @@ export const createUser = async (req, res) => {
             role_id       : mergedInfo.role_id.value,
             birth_date    : moment(mergedInfo.birth_date, "DD-MM-YYYY").format("YYYY-MM-DD"),
             password      :plainPassword,
+            employee_code
         }
         const user = await new User(object1).save();
 
@@ -262,9 +266,10 @@ export const assignPermissions = async (req, res) => {
     }
 }
 
-export const generateEmployeeCode = async (req, res) => {
+export const generateEmployeeCode = async (req = null, res = null) => {
     try {
-        let { prefix } = req.query;
+        let settings = await Settings.findOne();
+        const prefix = settings.emp_code;
 
         const user = await User.findOneWithDeleted({}, { employee_code: 1, _id: 0 }).sort({ createdAt: -1 }).lean();
         let nextCode = `${prefix}0001`;
@@ -279,7 +284,11 @@ export const generateEmployeeCode = async (req, res) => {
             }
         }
 
-        return successResponse(res, {emp_code: nextCode}, 200, '');
+        if(req && res){
+            return successResponse(res, {emp_code: nextCode}, 200, '');
+        }else{
+            return nextCode;
+        }
     } catch (error) {
         // console.log(error.message)
         return errorResponse(res, process.env.ERROR_MSG, error, 500);

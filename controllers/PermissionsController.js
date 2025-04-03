@@ -22,7 +22,7 @@ export const index = async (req, res) => {
                     name: 1,
                     action: 1,
                     createdAt: {
-                        $dateToString: { format: "%d %b, %Y", date: "$createdAt" }
+                        $dateToString: { format: "%d/%m/%Y", date: "$createdAt" }
                     }
                 }
             }

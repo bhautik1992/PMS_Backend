@@ -20,7 +20,7 @@ export const index = async (req, res) => {
                     _id: 1,
                     name: 1,
                     createdAt: {
-                        $dateToString: { format: "%d %b, %Y", date: "$createdAt" }
+                        $dateToString: { format: "%d/%m/%Y", date: "$createdAt" }
                     }
                 }
             }

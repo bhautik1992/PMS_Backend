@@ -68,13 +68,13 @@ export const index = async (req, res) => {
                     total_logged_hours: 1,
                     start_date: {
                         $dateToString: {
-                            format: "%d %b, %Y",
+                            format: "%d/%m/%Y",
                             date: "$start_date"
                         }
                     },
                     end_date: {
                         $dateToString: {
-                            format: "%d %b, %Y",
+                            format: "%d/%m/%Y",
                             date: "$end_date"
                         }
                     },

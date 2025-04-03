@@ -22,7 +22,7 @@ const schema = new mongoose.Schema({
     employee_code  : { 
         type: String,
         required : true, 
-        maxLength: 6, 
+        maxLength: 10, 
         unique: true, 
         sparse: true,
         set: v => v === "" ? undefined : v

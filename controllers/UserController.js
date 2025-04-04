@@ -208,7 +208,11 @@ export const getBankDetails = async (req, res) => {
     try{
         const { userId } = req.params;
         
-        const bankDetail = await BankDetails.findOne({ user_id: userId });
+        const bankDetail = await BankDetails.findOne({ user_id: userId }).populate({
+            path: "bank_id",
+            select: "name"
+        });
+                
         if(!bankDetail){
             return errorResponse(res, "Bank details not found!", null, 404);
         }

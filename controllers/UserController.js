@@ -164,7 +164,7 @@ export const updateProfile = async (req, res) => {
             delete updateData.profile_photo
         }
 
-        const updatedUser = await User.findByIdAndUpdate(userId, updateData, { new: true });
+        const updatedUser = await User.findByIdAndUpdate(userId, updateData, { new: true }).populate('role_id', 'name').populate('designation_id','name');        
         if (!updatedUser) {
             return errorResponse(res, "Collaborator not found!", null, 404);
         }

@@ -8,9 +8,56 @@ export const index = async (req, res) => {
         let projects     = [];
 
         if(userId){
-            projects = await Projects.find({
-                users_id: userId
-            }).sort({ _id: -1 });
+            projects = await Projects.aggregate([
+                {
+                    $match: { users_id: new mongoose.Types.ObjectId(userId) }
+                },
+                {
+                    $lookup: {
+                        from: "clients",
+                        localField: "client_id",
+                        foreignField: "_id",
+                        as: "client"
+                    }
+                },
+                {
+                    $unwind: {
+                        path: "$client",
+                        preserveNullAndEmptyArrays: true
+                    }
+                },
+                {
+                    $sort: { createdAt: -1 }
+                },
+                {
+                    $project: {
+                        _id: 1,
+                        name: 1,
+                        type: 1,
+                        price: 1,
+                        currency: 1,
+                        billing_cycle: 1,
+                        client_id: 1,
+                        status: 1,
+                        start_date: {
+                            $dateToString: { format: "%d-%m-%Y", date: "$start_date" }
+                        },
+                        end_date: {
+                            $dateToString: { format: "%d-%m-%Y", date: "$end_date" }
+                        },
+                        createdAt: {
+                            $dateToString: { format: "%d-%m-%Y", date: "$createdAt" }
+                        },
+                        client: {
+                            _id: "$client._id",
+                            first_name: "$client.first_name",
+                            last_name: "$client.last_name",
+                            email: "$client.email",
+                            country: "$client.country",
+                        }
+                    }
+                }
+            ]);
         }else{
             projects = await Projects.find().sort({ _id: -1 });
         }

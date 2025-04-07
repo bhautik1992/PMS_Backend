@@ -155,4 +155,16 @@ export const duration = async (req, res) => {
     }
 }
 
+export const destroy = async (req, res) => {
+    try {
+        const { id } = req.body;
+        
+        await Projects.delete({_id:id})
+        return successResponse(res, {}, 200, "Project Deleted Successfully");
+    }catch(error){
+        // error.message
+        return errorResponse(res, process.env.ERROR_MSG, error, 500);
+    }
+}
+
 

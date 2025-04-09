@@ -97,16 +97,43 @@ export const index = async (req, res) => {
                         }
                     },
                     name: 1,
+                    // user_name: {
+                    //     $ifNull: [
+                    //         { $concat: [
+                    //             { $ifNull: ["$user_info.first_name", null] },
+                    //             " ",
+                    //             { $ifNull: ["$user_info.last_name", null] }
+                    //         ] },
+                    //         null
+                    //     ]
+                    // },
+
                     user_name: {
-                        $ifNull: [
-                            { $concat: [
-                                { $ifNull: ["$user_info.first_name", null] },
-                                " ",
-                                { $ifNull: ["$user_info.last_name", null] }
-                            ] },
-                            null
-                        ]
+                        $cond: {
+                          if: { $eq: ["$user_id", new mongoose.Types.ObjectId(userId)] },
+                          then: {
+                            $concat: [
+                            //   "Self (",
+                              { $ifNull: ["$user_info.first_name", ""] },
+                              " ",
+                              { $ifNull: ["$user_info.last_name", ""] },
+                            //   ")"
+                            ]
+                          },
+                          else: {
+                            $trim: {
+                              input: {
+                                $concat: [
+                                  { $ifNull: ["$user_info.first_name", ""] },
+                                  " ",
+                                  { $ifNull: ["$user_info.last_name", ""] }
+                                ]
+                              }
+                            }
+                          }
+                        }
                     },
+
                     company_email: { $ifNull: ["$user_info.company_email", null] }, 
                     project_name: { $ifNull: ["$project_info.name", null] } 
                 },

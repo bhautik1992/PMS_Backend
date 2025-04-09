@@ -12,9 +12,6 @@ export const index = async (req, res) => {
 
         const tasks = await Tasks.aggregate([
             // { $match: query },
-            { 
-                $match: { user_id: new mongoose.Types.ObjectId(userId) }
-            },
             {
                 $lookup: {
                     from: "users",
@@ -25,6 +22,15 @@ export const index = async (req, res) => {
             },
             { $unwind: { path: "$user_info", preserveNullAndEmptyArrays: true } },
 
+            {
+                $match: {
+                    $or: [
+                        { user_id: new mongoose.Types.ObjectId(userId) },
+                        { "user_info.reporting_to": new mongoose.Types.ObjectId(userId) }
+                    ]
+                }
+            },
+            
             {
                 $lookup: {
                     from: "projects", // Projects collection to join

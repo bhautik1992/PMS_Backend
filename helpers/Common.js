@@ -1,5 +1,7 @@
 import RolePermissions from '../models/RolePermissions.js';
 import {successResponse, errorResponse} from './ResponseHandler.js';
+import Projects from '../models/Projects.js';
+import User from '../models/User.js';
 
 export const convertTimeToDecimal = (time) => {
     const [hours, minutes] = time.split(':').map(Number);
@@ -122,6 +124,20 @@ export const generatePlainPassword = () => {
     // Append last 2 digits of the current timestamp to ensure uniqueness
     const timestamp = Date.now().toString().slice(-2); // Get last 2 digits
     return password + timestamp; // Ensures final length is exactly 10 characters
+}
+
+export const getAssignedProjectsList = async (userId) => {
+    return await Projects.find(
+        { users_id: userId },
+        { _id: 1, name: 1 }
+    ).sort({ _id: -1 });
+}
+
+export const getReporintgToList = async (userId) => {
+    return await User.find(
+        { reporting_to: userId },
+        { _id: 1, first_name: 1, last_name: 1 }
+    ).sort({ _id: -1 });  
 }
 
 

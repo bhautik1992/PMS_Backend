@@ -1,5 +1,6 @@
 import Clients from '../models/Clients.js';
 import { successResponse, errorResponse } from '../helpers/ResponseHandler.js';
+import mongoose from 'mongoose';
 
 export const index = async (req, res) => {
     try {
@@ -49,6 +50,53 @@ export const validateUniqueClientDetails = async (existingRecord, newRecord) => 
     }
 
     return errorMessage;
+}
+
+export const edit = async (req, res) => {
+    try{
+        const { id } = req.params;
+        
+        if(!mongoose.Types.ObjectId.isValid(id)){
+            return errorResponse(res, process.env.NO_RECORD, null, 400);
+        }
+
+        const client = await Clients.findById(id);
+        if(!client) {
+            return errorResponse(res, process.env.NO_RECORD, null, 404);
+        }
+
+        return successResponse(res, client, 200, '');
+    } catch (error) {
+        // console.log(error.message);
+        return errorResponse(res, process.env.ERROR_MSG, error, 500);
+    }
+}
+
+export const update = async (req, res) => {
+    try {
+        const { personalInfo, addressInfo, clientId } = req.body;
+        const mergedInfo = { ...personalInfo, ...addressInfo };
+
+        const query = [];
+        if (mergedInfo?.email?.trim()) query.push({ email: mergedInfo.email.trim() });
+
+        const queryFilter = { $or: query };
+        if(clientId) {
+            queryFilter._id = { $ne: clientId };
+        }
+
+        const exiUser = query.length > 0 ? await Clients.findOne(queryFilter).lean() : null;        
+        let clientError = await validateUniqueClientDetails(exiUser,mergedInfo);
+        if(clientError !== ''){
+            return errorResponse(res, clientError, null, 404);
+        }
+
+        await Clients.findByIdAndUpdate(clientId, mergedInfo, { new: true });
+        return successResponse(res, {}, 200, 'Client Updated Successfully');
+    } catch (error) {
+        // console.log(error.message)
+        return errorResponse(res,process.env.ERROR_MSG,error,500);
+    }
 }
 
 

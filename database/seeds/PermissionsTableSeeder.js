@@ -117,6 +117,21 @@ export const permissionsTable = async () => {
         },{
             name : 'Employee Permissions',
             action: 'employee_permissions',
+        },{
+            name : 'Clients',
+            action: 'clients',
+        },{
+            name : 'Client Create',
+            action: 'client_create',
+        },{
+            name : 'Client Edit',
+            action: 'client_edit',
+        },{
+            name : 'Client Delete',
+            action: 'client_delete',
+        },{
+            name : 'Client View',
+            action: 'client_view',
         }];
 
         for (const value of object) {

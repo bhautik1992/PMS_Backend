@@ -153,6 +153,7 @@ export const createUser = async (req, res) => {
         process.env.APP_ENV == 'production' && await passwordEmail(user,plainPassword);
         return successResponse(res, {}, 200, 'Collaborator Created Successfully');
     } catch (error) {
+        // console.log(error.message)
         if(error.code === 11000){
             const field          = Object.keys(error.keyPattern)[0];
             const formattedField = await formatWord(field);

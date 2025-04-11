@@ -1,6 +1,7 @@
 import Clients from '../models/Clients.js';
 import { successResponse, errorResponse } from '../helpers/ResponseHandler.js';
 import mongoose from 'mongoose';
+import { formatWord } from '../helpers/Common.js';
 
 export const index = async (req, res) => {
     try {
@@ -10,6 +11,39 @@ export const index = async (req, res) => {
     } catch (error) {
         // console.log(error.message)
         return errorResponse(res,process.env.ERROR_MSG,error,500);
+    }
+}
+
+export const listing = async (req, res) => {
+    try {
+        const { page = 1, perPage = 10, search = "" } = req.query;
+        const pageNumber    = parseInt(page, 10);
+        const perPageNumber = parseInt(perPage, 10);
+
+        const query = search ? { name: new RegExp(search, "i") } : {};
+
+        const clients = await Clients.aggregate([
+            { $match: query },
+            { $sort: { _id: -1 } },
+            { $skip: (pageNumber - 1) * perPageNumber },
+            { $limit: perPageNumber },
+            {
+                $project: {
+                    _id: 1,
+                    first_name: 1,
+                    last_name: 1,
+                    email: 1,
+                    country: 1,
+                    is_active: 1
+                }
+            }
+        ]);
+
+        const total = await Clients.countDocuments(query);
+        return successResponse(res, { clients, total });
+    } catch (error) {
+        // console.log(error.message)
+        return errorResponse(res, process.env.ERROR_MSG, error, 500);
     }
 }
 
@@ -96,6 +130,18 @@ export const update = async (req, res) => {
     } catch (error) {
         // console.log(error.message)
         return errorResponse(res,process.env.ERROR_MSG,error,500);
+    }
+}
+
+export const destroy = async (req, res) => {
+    try {
+        const { id } = req.body;
+        
+        await Clients.delete({_id:id})
+        return successResponse(res, {}, 200, "Client Deleted Successfully");
+    }catch(error){
+        // error.message
+        return errorResponse(res, process.env.ERROR_MSG, error, 500);
     }
 }
 

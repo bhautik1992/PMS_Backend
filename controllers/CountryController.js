@@ -1,17 +1,8 @@
 import { successResponse, errorResponse } from "../helpers/ResponseHandler.js";
 import Country from "../models/Country.js";
+import mongoose from "mongoose";
 
-export const createCountry = async (req, res) => {
-  try {
-    const newCountry = await new Country(req.body).save();
-    successResponse(res, newCountry, 200, "Country Created Successfully");
-  } catch (error) {
-    console.log(error.message);
-    errorResponse(res, process.env.ERROR_MSG, error, 500);
-  }
-};
-
-export const getCountries = async (req, res) => {
+export const index = async (req, res) => {
   try {
     const { page = 1, perPage = 10, search = "" } = req.query;
     const pageNumber = parseInt(page, 10);
@@ -29,7 +20,7 @@ export const getCountries = async (req, res) => {
           _id: 1,
           name: 1,
           code: 1,
-          currency: 1,  
+          currency: 1,
           symbol: 1,
           createdAt: {
             $dateToString: { format: "%d %b, %Y", date: "$createdAt" },
@@ -46,32 +37,62 @@ export const getCountries = async (req, res) => {
   }
 };
 
-export const updateCountry = async (req, res) => {
+export const create = async (req, res) => {
   try {
-    const { id } = req.params;
-    const updated = await Country.findByIdAndUpdate(id, req.body, {
-      new: true,
-      runValidators: true,
-    });
+    let message = "Country Created Succesfully";
+    const { countryId } = req.body;
 
-    if (!updated) {
-      return errorResponse(res, "Country not found", {}, 404);
+    if (countryId) {
+      const updatedCountry = await Country.findByIdAndUpdate(
+        countryId,
+        req.body,
+        { new: true }
+      );
+
+      if (!updatedCountry) {
+        return errorResponse(res, "Country not found", null, 404);
+      }
+
+      message = "Country Updated Successfully";
+    } else {
+      await new Country(req.body).save();
     }
 
-    successResponse(res, { updated }, 200, "Country updated successfully");
+    successResponse(res, {}, 200, message);
   } catch (error) {
-    console.log(error.message);
+    // console.log(e.message);
     errorResponse(res, process.env.ERROR_MSG, error, 500);
   }
 };
 
-export const deleteCountry = async (req, res) => {
+export const edit = async (req, res) => {
   try {
     const { id } = req.params;
-    await Country.delete({ _id: id });
-    return successResponse(res, {}, 200, "Country deleted successfully");
+
+    if (!mongoose.Types.ObjectId.isValid(id)) {
+      return errorResponse(res, process.env.NO_RECORD, null, 400);
+    }
+
+    const country = await Country.findById(id);
+    if (!country) {
+      return errorResponse(res, process.env.NO_RECORD, null, 404);
+    }
+    return successResponse(res, country, 200, "");
+ 
   } catch (error) {
-    console.log(error.message);
-    errorResponse(res, process.env.ERROR_MSG, error, 500);
+    // console.log(error.message);
+    return errorResponse(res, process.env.ERROR_MSG, error, 500);
+  }
+};
+
+export const destroy = async (req, res) => {
+  try {
+    const { id } = req.body;
+
+    await Country.delete({ _id: id });
+    return successResponse(res, {}, 200, "Country Deleted Successfully");
+  } catch (error) {
+    // error.message
+    return errorResponse(res, process.env.ERROR_MSG, error, 500);
   }
 };

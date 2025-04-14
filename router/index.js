@@ -26,7 +26,7 @@ router.use("/tasks", Tasks);
 router.use("/time_entry", TimeEntry);
 router.use("/clients", Clients);
 router.use("/holidays", Holiday);
-router.use("/country", Country);
+router.use("/countrys", Country);
 
 router.post("/forgot_password", forgotPassword);
 router.post("/reset_password", resetPassword);

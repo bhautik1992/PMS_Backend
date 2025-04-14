@@ -49,9 +49,9 @@ export const create = async (req, res) => {
         }
 
         if (holidayId) {
-            const updatedRole = await Holiday.findByIdAndUpdate(holidayId, req.body, { new: true });
+            const updatedCountry = await Holiday.findByIdAndUpdate(holidayId, req.body, { new: true });
 
-            if (!updatedRole) {
+            if (!updatedCountry) {
                 return errorResponse(res, "Holiday not found", null, 404);
             }
 

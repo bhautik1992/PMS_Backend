@@ -9,12 +9,14 @@ export const usersTable = async () => {
         await connectDB();
         const role          = await Roles.findOne({ name: "Admin" });
         const designation   = await Designation.findOne({ name: "CEO" });
+        const userId        = new mongoose.Types.ObjectId();
 
         const object = [{
+            _id                    :  userId,
             role_id                :  role._id,
-            first_name             : 'Admin',
-            last_name              : 'A',
-            middle_name            : 'Edward',
+            first_name             : 'Dhruvit',
+            last_name              : 'Rajpura',
+            middle_name            : 'G',
             birth_date             : new Date(new Date().toISOString().split('T')[0] + "T00:00:00.000+00:00"),
             username               : 'admin',
             employee_code          : 'HS0001',
@@ -23,8 +25,9 @@ export const usersTable = async () => {
             company_email          : 'admin.hailysoft@gmail.com',
             personal_email         : 'admin.personal@gmail.com',
             designation_id         :  designation._id,
+            reporting_to           :  userId,
             shift_time             : 'first_shift',
-            permanent_address      : '123 Admin Street, Main City',
+            permanent_address      : 'Ahmedabad',
             temporary_address      :  null,
             mobile_number          : '9000000001',
             alternate_mobile_number: '9000000002',

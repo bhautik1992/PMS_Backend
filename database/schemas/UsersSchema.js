@@ -47,6 +47,7 @@ const schema = new mongoose.Schema({
     },
     shift_time             : { type: String, enum: ['first_shift', 'second_shift'], required: true },
     designation_id         : { type: mongoose.Schema.Types.ObjectId,ref: 'Designation',required: true},
+    reporting_to           : { type: mongoose.Schema.Types.ObjectId, ref: 'User', required: true },
     permanent_address      : { type: String, required : true },
     temporary_address      : { type: String, default  : null },
     mobile_number          : { type: String, required : true, maxLength: 10 },

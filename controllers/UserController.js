@@ -33,6 +33,25 @@ export const getUsers = async (req, res) => {
                 }
             },
             { $unwind: "$designation" },
+            {
+                $lookup: {
+                    from: "users", // self-reference
+                    localField: "reporting_to",
+                    foreignField: "_id",
+                    as: "reporting_user"
+                }
+            },
+            { $unwind: { path: "$reporting_user", preserveNullAndEmptyArrays: true } },
+            {
+                $lookup: {
+                    from: "designations",
+                    localField: "reporting_user.designation_id",
+                    foreignField: "_id",
+                    as: "reporting_user_designation"
+                }
+            },
+            { $unwind: { path: "$reporting_user_designation", preserveNullAndEmptyArrays: true } },
+
             // {
             //     $match: { "role.name": { $ne: "Admin" } }
             // },
@@ -54,6 +73,15 @@ export const getUsers = async (req, res) => {
                     designation_id: {
                         _id: "$designation._id",
                         name: "$designation.name"
+                    },
+                    reporting_to: {
+                        _id: "$reporting_user._id",
+                        first_name: "$reporting_user.first_name",
+                        last_name: "$reporting_user.last_name",
+                        designation: {
+                            _id: "$reporting_user_designation._id",
+                            name: "$reporting_user_designation.name"
+                        }
                     }
                 }
             },
@@ -107,6 +135,7 @@ export const createUser = async (req, res) => {
             shift_time    : mergedInfo.shift_time.value,
             designation_id: mergedInfo.designation_id.value,
             role_id       : mergedInfo.role_id.value,
+            reporting_to  : mergedInfo.reporting_to.value,
             birth_date    : moment(mergedInfo.birth_date, "DD-MM-YYYY").format("YYYY-MM-DD"),
             password      :plainPassword,
             employee_code
@@ -124,6 +153,7 @@ export const createUser = async (req, res) => {
         process.env.APP_ENV == 'production' && await passwordEmail(user,plainPassword);
         return successResponse(res, {}, 200, 'Collaborator Created Successfully');
     } catch (error) {
+        // console.log(error.message)
         if(error.code === 11000){
             const field          = Object.keys(error.keyPattern)[0];
             const formattedField = await formatWord(field);
@@ -367,6 +397,7 @@ export const update = async (req, res) => {
             ...(mergedInfo.shift_time?.value && { shift_time: mergedInfo.shift_time.value }),
             ...(mergedInfo.designation_id?.value && { designation_id: mergedInfo.designation_id.value }),
             ...(mergedInfo.role_id?.value && { role_id: mergedInfo.role_id.value }),
+            ...(mergedInfo.reporting_to?.value && { reporting_to: mergedInfo.reporting_to.value }),
             ...(mergedInfo.birth_date && { birth_date: moment(mergedInfo.birth_date, "DD-MM-YYYY").format("YYYY-MM-DD") }),
         }
         await User.findByIdAndUpdate(userId, object1, { new: true });

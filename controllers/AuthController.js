@@ -11,7 +11,19 @@ export const login = async (req, res) => {
     const { company_email, password } = req.body;
     
     try {
-        const user = await User.findOne({ company_email }).select('-createdAt -updatedAt -deletedAt -deleted -__v').populate('role_id', 'name').populate('designation_id','name');
+        const user = await User.findOne({ company_email })
+            .select('-createdAt -updatedAt -deletedAt -deleted -__v')
+            .populate('role_id', 'name')
+            .populate('designation_id', 'name')
+            .populate({
+                path: 'reporting_to',
+                select: 'first_name last_name designation_id',
+                populate: {
+                    path: 'designation_id',
+                    select: 'name'
+                }
+            });
+
         if(!user) {
             return errorResponse(res,'User not found!', null, 404);
         }

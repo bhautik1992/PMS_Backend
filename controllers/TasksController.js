@@ -1,20 +1,21 @@
 import Tasks from '../models/Tasks.js';
 import { successResponse, errorResponse } from '../helpers/ResponseHandler.js';
+import { getAssignedProjectsList, getReporintgToList } from '../helpers/Common.js';
 import mongoose from 'mongoose';
 
 export const index = async (req, res) => {
     try {
-        const { page = 1, perPage = 10, search = "", userId } = req.query;
+        const { page = 1, perPage = 10, search = "", filter = [], userId } = req.query;
+
+        const projectId     = filter.find(f => f.type === 'project')?.value || '';
+        const selAssignedTo = filter.find(f => f.type === 'assignedto')?.value || '';
+
         const pageNumber    = parseInt(page, 10);
         const perPageNumber = parseInt(perPage, 10);
 
         const query = search ? { name: new RegExp(search, "i") } : {};
 
         const tasks = await Tasks.aggregate([
-            // { $match: query },
-            { 
-                $match: { user_id: new mongoose.Types.ObjectId(userId) }
-            },
             {
                 $lookup: {
                     from: "users",
@@ -26,6 +27,15 @@ export const index = async (req, res) => {
             { $unwind: { path: "$user_info", preserveNullAndEmptyArrays: true } },
 
             {
+                $match: {
+                    $or: [
+                        { user_id: new mongoose.Types.ObjectId(userId) },
+                        { "user_info.reporting_to": new mongoose.Types.ObjectId(userId) }
+                    ]
+                }
+            },
+            
+            {
                 $lookup: {
                     from: "projects", // Projects collection to join
                     localField: "project_id", // Field in Tasks collection
@@ -35,6 +45,29 @@ export const index = async (req, res) => {
             },
             { $unwind: { path: "$project_info", preserveNullAndEmptyArrays: true } },
             
+            {
+                $match: {
+                    "project_info.users_id": new mongoose.Types.ObjectId(userId)
+                }
+            },
+
+            ...(projectId && selAssignedTo ? [{
+                $match: {
+                    project_id: new mongoose.Types.ObjectId(projectId),
+                    user_id: new mongoose.Types.ObjectId(selAssignedTo)
+                }
+            }] :
+            projectId ? [{
+                $match: {
+                    project_id: new mongoose.Types.ObjectId(projectId)
+                }
+            }] :
+            selAssignedTo ? [{
+                $match: {
+                    user_id: new mongoose.Types.ObjectId(selAssignedTo)
+                }
+            }] : []),
+
             {
                 $lookup: {
                     from: "time_entries",
@@ -92,15 +125,31 @@ export const index = async (req, res) => {
                     },
                     name: 1,
                     user_name: {
-                        $ifNull: [
-                            { $concat: [
-                                { $ifNull: ["$user_info.first_name", null] },
-                                " ",
-                                { $ifNull: ["$user_info.last_name", null] }
-                            ] },
-                            null
-                        ]
+                        $cond: {
+                          if: { $eq: ["$user_id", new mongoose.Types.ObjectId(userId)] },
+                          then: {
+                            $concat: [
+                            //   "Self (",
+                              { $ifNull: ["$user_info.first_name", ""] },
+                              " ",
+                              { $ifNull: ["$user_info.last_name", ""] },
+                            //   ")"
+                            ]
+                          },
+                          else: {
+                            $trim: {
+                              input: {
+                                $concat: [
+                                  { $ifNull: ["$user_info.first_name", ""] },
+                                  " ",
+                                  { $ifNull: ["$user_info.last_name", ""] }
+                                ]
+                              }
+                            }
+                          }
+                        }
                     },
+
                     company_email: { $ifNull: ["$user_info.company_email", null] }, 
                     project_name: { $ifNull: ["$project_info.name", null] } 
                 },
@@ -109,7 +158,8 @@ export const index = async (req, res) => {
 
         const total = await Tasks.countDocuments(query);
         return successResponse(res, { data: tasks, total });
-    } catch (error) {
+    }catch (error) {
+        // error.message
         return errorResponse(res, process.env.ERROR_MSG, error, 500);
     }
 };
@@ -187,6 +237,20 @@ export const update = async (req, res) => {
         return successResponse(res, {}, 200, "Task Updated Successfully");
     } catch (error) {
         // error.message
+        return errorResponse(res, process.env.ERROR_MSG, error, 500);
+    }
+}
+
+export const getFilters = async (req, res) => {
+    try{
+        const { id } = req.query;
+
+        const projects  = await getAssignedProjectsList(id);
+        const reporting = await getReporintgToList(id);
+        
+        return successResponse(res, { projects, reporting });
+    }catch (error) {
+        // console.log(error.message);
         return errorResponse(res, process.env.ERROR_MSG, error, 500);
     }
 }

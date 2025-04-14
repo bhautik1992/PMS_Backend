@@ -51,6 +51,14 @@ export const rolePermissionsTable = async () => {
             "client_edit",
             "client_delete",
             "client_view",
+            "holidays",
+            "holiday_create",
+            "holiday_edit",
+            "holiday_delete",
+            "countries",
+            "country_create",
+            "country_edit",
+            "country_delete",
         ];
         const role = await Roles.findOne({ name: "Admin" });
         const permissions = await Permissions.find({ action: { $in: actions } });

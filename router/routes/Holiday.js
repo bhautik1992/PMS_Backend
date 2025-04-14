@@ -1,13 +1,14 @@
 import express from "express";
 import { protectRoute } from "../../middleware/Authenticate.js";
-import { create, getHoliday , updateHoliday , deleteHoliday } from "../../controllers/HolidayController.js";
+import { create, index , edit, destroy } from "../../controllers/HolidayController.js";
 
 const router = express.Router();
 
-router.get("/", protectRoute, getHoliday);
+router.get("/", protectRoute, index);
 router.post("/create", protectRoute, create);
-router.put("/update/:id", protectRoute, updateHoliday);
-router.delete("/delete/:id", protectRoute, deleteHoliday);
-
+router.get('/edit/:id', protectRoute, edit);
+router.post("/destroy", protectRoute, destroy);
 
 export default router;
+
+

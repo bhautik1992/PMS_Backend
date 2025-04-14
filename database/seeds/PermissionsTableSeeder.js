@@ -132,6 +132,37 @@ export const permissionsTable = async () => {
         },{
             name : 'Client View',
             action: 'client_view',
+        },{
+            name : 'Holidays',
+            action: 'holidays',
+        },
+        ,{
+            name : 'Holiday Create',
+            action: 'holiday_create',
+        },
+        ,{
+            name : 'Holiday Edit',
+            action: 'holiday_edit',
+        },
+        ,{
+            name : 'Holiday Delete',
+            action: 'holiday_delete',
+        },
+        ,{
+            name : 'Countries',
+            action: 'countries',
+        },
+        ,{
+            name : 'Country Create',
+            action: 'country_create',
+        },
+        ,{
+            name : 'Country Edit',
+            action: 'country_edit',
+        },
+        ,{
+            name : 'Country Delete',
+            action: 'country_delete',
         }];
 
         for (const value of object) {

@@ -50,6 +50,7 @@ const schema = new mongoose.Schema({
     reporting_to           : { type: mongoose.Schema.Types.ObjectId, ref: 'User', required: true },
     permanent_address      : { type: String, required : true },
     temporary_address      : { type: String, default  : null },
+    as_above               : { type: Boolean, default  : false },
     mobile_number          : { type: String, required : true, maxLength: 10 },
     alternate_mobile_number: { type: String, required : true, maxLength: 10 },
     emergency_contact      : { type: String, required : true, maxLength: 10 },

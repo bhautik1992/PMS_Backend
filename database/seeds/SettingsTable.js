@@ -10,6 +10,7 @@ export const settingTable = async () => {
             emp_code    : 'HS',
             linkedin_url: 'https://www.linkedin.com/in/your-profile',
             twitter_url : 'https://twitter.com/your-username',
+            open_days   : 0,
         }];
 
         for (const details of settingskDetails) {

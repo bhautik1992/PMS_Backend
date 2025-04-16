@@ -67,6 +67,9 @@ export const permissionsTable = async () => {
             name : 'Project View',
             action: 'project_view',
         },{
+            name : 'Project Team',
+            action: 'project_team',
+        },{
             name : 'Tasks',
             action: 'tasks',
         },{

@@ -167,4 +167,34 @@ export const destroy = async (req, res) => {
     }
 }
 
+export const team = async (req, res) => {
+    try{
+        const { id } = req.params;
+        
+        if(!mongoose.Types.ObjectId.isValid(id)){
+            return errorResponse(res, process.env.NO_RECORD, null, 400);
+        }
+
+        const team = await Projects.findById(id)
+            .select('users_id')
+            .populate({
+                path: 'users_id',
+                select: 'first_name last_name company_email profile_photo',
+                populate: {
+                    path: 'role_id',
+                    select: 'name'
+                }
+            });
+
+        if(!team){
+            return errorResponse(res, process.env.NO_RECORD, null, 404);
+        }
+
+        return successResponse(res, team, 200, '');
+    } catch (error) {
+        // console.log(error.message);
+        return errorResponse(res, process.env.ERROR_MSG, error, 500);
+    }
+}
+
 

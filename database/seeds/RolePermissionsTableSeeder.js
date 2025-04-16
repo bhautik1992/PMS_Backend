@@ -29,6 +29,7 @@ export const rolePermissionsTable = async () => {
             "project_edit",
             "project_delete",
             "project_view",
+            "project_team",
             "tasks",
             "task_create",
             "task_edit",

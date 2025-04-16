@@ -23,6 +23,11 @@ const schema = new mongoose.Schema(
       type: String,
       require: true,
     },
+    open_days: { 
+        type: Number,
+        required: true,
+        maxLength: 1
+    },
     deletedAt: {
       type: Date,
       default: null,

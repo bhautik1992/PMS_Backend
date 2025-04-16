@@ -43,7 +43,6 @@ export const saveSettings = async (req, res) => {
         );
       }
     }
-
     return successResponse(res, settings, 200, "Settings Saved Successfully");
   } catch (error) {
     console.log(error.message);

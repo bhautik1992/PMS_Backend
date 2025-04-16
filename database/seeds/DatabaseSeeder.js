@@ -10,7 +10,7 @@ import { designationTable } from "./DesignationTableSeeder.js";
 import { banksTable } from "./BanksTableSeeder.js";
 import { clientsTable } from "./ClientsTableSeeder.js";
 import { projectsTable } from "./ProjectsTableSeeder.js";
-// import { countryTable } from "./CountriesTableSeeder.js";
+import { countryTable } from "./CountriesTableSeeder.js";
 
 dotenv.config();
 
@@ -28,7 +28,7 @@ const seedDatabase = async () => {
     await settingTable();
     await clientsTable();
     await projectsTable();
-    // await countryTable();
+    await countryTable();
 
     console.log("Seeder executed successfully!");
     process.exit(0);

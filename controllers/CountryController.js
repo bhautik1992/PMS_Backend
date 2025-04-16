@@ -32,7 +32,7 @@ export const index = async (req, res) => {
     const total = await Country.countDocuments(query);
     successResponse(res, { countries, total });
   } catch (error) {
-    console.log(error.message);
+    // console.log(error.message);
     errorResponse(res, process.env.ERROR_MSG, error, 500);
   }
 };

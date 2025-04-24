@@ -88,21 +88,6 @@ export const permissionsTable = async () => {
             name : 'Task Time Entry',
             action: 'task_time_entry',
         },{
-            name : 'Time Entry',
-            action: 'time_entry',
-        },{
-            name : 'Time Create',
-            action: 'time_entry_create',
-        },{
-            name : 'Time Edit',
-            action: 'time_entry_edit',
-        },{
-            name : 'Time Delete',
-            action: 'time_entry_delete',
-        },{
-            name : 'Time View',
-            action: 'time_entry_view',
-        },{
             name : 'Employee',
             action: 'employee',
         },{

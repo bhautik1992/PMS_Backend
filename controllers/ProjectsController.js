@@ -26,6 +26,37 @@ export const index = async (req, res) => {
                         preserveNullAndEmptyArrays: true
                     }
                 },
+
+                {
+                    $lookup: {
+                      from: "tasks",
+                      localField: "_id",
+                      foreignField: "project_id",
+                      as: "tasks"
+                    }
+                },
+                {
+                    $lookup: {
+                      from: "time_entries",
+                      let: { projectId: "$_id" },
+                      pipeline: [
+                        {
+                          $match: {
+                            $expr: {
+                              $eq: ["$project_id", "$$projectId"]
+                            }
+                          }
+                        }
+                      ],
+                      as: "time_entries"
+                    }
+                },
+                {
+                    $addFields: {
+                      total_task_hours: { $sum: "$tasks.hours" },
+                      total_logged_hours: { $sum: "$time_entries.hours" }
+                    }
+                },
                 {
                     $sort: { createdAt: -1 }
                 },
@@ -39,6 +70,8 @@ export const index = async (req, res) => {
                         billing_cycle: 1,
                         client_id: 1,
                         status: 1,
+                        total_task_hours: 1,
+                        total_logged_hours: 1,
                         start_date: {
                             $dateToString: { format: "%d-%m-%Y", date: "$start_date" }
                         },

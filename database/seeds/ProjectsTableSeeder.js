@@ -23,7 +23,7 @@ export const projectsTable = async () => {
             client_id    : client._id,
             created_by   : user._id,
         },{
-            name         : 'Betch',
+            name         : 'Bench',
             type         : 'hourly',
             price        : '1',
             currency     : 'inr',

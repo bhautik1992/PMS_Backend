@@ -29,10 +29,9 @@ const schema = new mongoose.Schema({
         default:null, 
         maxLength: 15 
     },
-    country: { 
-        type: String, 
-        required : true, 
-        maxLength: 20 
+    country: {
+        type: mongoose.Schema.Types.ObjectId,
+        ref: 'Country'
     },
     is_active: { 
         type: Boolean, 

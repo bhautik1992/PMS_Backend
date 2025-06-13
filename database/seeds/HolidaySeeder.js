@@ -2,7 +2,7 @@ import mongoose from "mongoose";
 import Holiday from "../../models/Holiday.js";
 import connectDB from "../../config/database.js";
 
-const Holidaysss = [
+const Holidays = [
   {
     name: "New Year",
     start_date: new Date("2025-01-01"),
@@ -58,7 +58,7 @@ const Holidaysss = [
 export const HolidayTable = async () => {
   try {
     await connectDB();
-    await Holiday.insertMany(Holidaysss);
+    await Holiday.insertMany(Holidays);
     mongoose.connection.close();
   } catch (error) {
     // console.error('Error during seeding:', error);
@@ -66,4 +66,4 @@ export const HolidayTable = async () => {
   }
 };
 
-HolidayTable();
+

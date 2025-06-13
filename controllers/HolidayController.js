@@ -29,7 +29,6 @@ export const index = async (req, res) => {
                 }
             }
         ]);
-
         const total = await Holiday.countDocuments(query);
         return successResponse(res, { holidays, total });
     } catch (error) {
@@ -49,9 +48,9 @@ export const create = async (req, res) => {
         }
 
         if (holidayId) {
-            const updatedRole = await Holiday.findByIdAndUpdate(holidayId, req.body, { new: true });
+            const updateHoliday = await Holiday.findByIdAndUpdate(holidayId, req.body, { new: true });
 
-            if (!updatedRole) {
+            if (!updateHoliday) {
                 return errorResponse(res, "Holiday not found", null, 404);
             }
 
@@ -68,7 +67,7 @@ export const create = async (req, res) => {
 }
 
 export const edit = async (req, res) => {
-    try{
+    try {
         const { id } = req.params;
         
         if(!mongoose.Types.ObjectId.isValid(id)){
@@ -82,7 +81,6 @@ export const edit = async (req, res) => {
         
         return successResponse(res, holiday, 200, '');
     } catch (error) {
-        // console.log(error.message);
         return errorResponse(res, process.env.ERROR_MSG, error, 500);
     }
 }

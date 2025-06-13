@@ -10,7 +10,9 @@ import { designationTable } from "./DesignationTableSeeder.js";
 import { banksTable } from "./BanksTableSeeder.js";
 import { clientsTable } from "./ClientsTableSeeder.js";
 import { projectsTable } from "./ProjectsTableSeeder.js";
-// import { countryTable } from "./CountriesTableSeeder.js";
+import { countryTable } from "./CountriesTableSeeder.js";
+import { HolidayTable } from "./HolidaySeeder.js";
+import { stateTable } from "./StateTableSeeder.js";
 
 dotenv.config();
 
@@ -18,17 +20,21 @@ const seedDatabase = async () => {
   try {
     await connectDB();
 
-    await designationTable();
-    await rolesTable();
-    await permissionsTable();
-    await rolePermissionsTable();
-    await usersTable();
-    await banksTable();
-    await bankDetailsTable();
-    await settingTable();
-    await clientsTable();
-    await projectsTable();
+    // await rolesTable();         
+    // await permissionsTable();
+    // await rolePermissionsTable();  
+    // await designationTable();
+    // await banksTable();
     // await countryTable();
+    // await HolidayTable();
+    // await stateTable()
+    // await settingTable();
+    // await clientsTable();
+    // await projectsTable();
+    // await bankDetailsTable();
+    // await usersTable();         
+    
+    
 
     console.log("Seeder executed successfully!");
     process.exit(0);

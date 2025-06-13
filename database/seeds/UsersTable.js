@@ -3,6 +3,9 @@ import User from '../../models/User.js';
 import connectDB from '../../config/database.js';
 import Roles from '../../models/Roles.js';
 import Designation from '../../models/Designation.js';
+import Country from '../../models/Country.js';
+import State from '../../models/State.js';
+
 
 export const usersTable = async () => {
     try {
@@ -10,7 +13,9 @@ export const usersTable = async () => {
         const role          = await Roles.findOne({ name: "Admin" });
         const designation   = await Designation.findOne({ name: "CEO" });
         const userId        = new mongoose.Types.ObjectId();
-
+        const countryId = await Country.findOne({name:"India"})
+        const stateId =  await State.findOne({name: "Gujarat"})
+        
         const object = [{
             _id                    :  userId,
             role_id                :  role._id,
@@ -31,11 +36,11 @@ export const usersTable = async () => {
             temporary_address      :  null,
             mobile_number          : '9000000001',
             alternate_mobile_number: '9000000002',
-            emergency_contact      : '9000000003',
+            emergency_contact      : '9000000003',      
             gender                 : 'male',
             city                   : 'Ahmedabad',
-            state                  : 'Gujarat',
-            country                : 'India'
+            state                  : stateId._id,
+            country                : countryId._id,
         }];
 
         for (const userData of object) {

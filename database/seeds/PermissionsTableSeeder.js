@@ -1,3 +1,6 @@
+import dotenv from 'dotenv';
+dotenv.config();
+
 import mongoose from 'mongoose';
 import Permissions from '../../models/Permissions.js';
 import connectDB from '../../config/database.js';
@@ -138,35 +141,35 @@ export const permissionsTable = async () => {
         },{
             name : 'Holidays',
             action: 'holidays',
-        },
-        ,{
+        },{
             name : 'Holiday Create',
             action: 'holiday_create',
-        },
-        ,{
+        },{
             name : 'Holiday Edit',
             action: 'holiday_edit',
-        },
-        ,{
+        },{
             name : 'Holiday Delete',
             action: 'holiday_delete',
-        },
-        ,{
+        },{
             name : 'Countries',
             action: 'countries',
-        },
-        ,{
-            name : 'Country Create',
+        },{
+            name : 'Country ',
             action: 'country_create',
-        },
-        ,{
+        },{
             name : 'Country Edit',
             action: 'country_edit',
-        },
-        ,{
+        },{
             name : 'Country Delete',
             action: 'country_delete',
-        }];
+        },{
+            name : 'Report',
+            action: 'report',
+        },{
+            name : 'Leave',
+            action: 'leave',
+        }
+    ];
 
         for (const value of object) {
             const permission = new Permissions(value);
@@ -179,5 +182,4 @@ export const permissionsTable = async () => {
         mongoose.connection.close();
     }
 };
-
 

@@ -18,6 +18,10 @@ export const saveSettings = async (req, res) => {
         const updateData = req.body;
         let settings = await Settings.findOne();
 
+        if (req.file) {
+            updateData.company_image = req.file.path.replace(/\\/g, '/');
+        }
+
         if(settings){
             settings = await Settings.findOneAndUpdate({}, updateData, { new: true, upsert: true });
 

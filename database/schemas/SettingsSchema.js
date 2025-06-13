@@ -1,5 +1,6 @@
 import mongoose from 'mongoose';
 import mongooseDelete from "mongoose-delete";
+import { type } from 'os';
 
 const schema = new mongoose.Schema({
     emp_code: { 
@@ -22,10 +23,19 @@ const schema = new mongoose.Schema({
         required: true,
         maxLength: 1
     },
+    company_image : {
+        type : String,
+    },
     deletedAt: {
         type: Date,
         default: null
-    }
+    },
+   total_leaves: {
+    type: Number,
+    required: true,
+    min: 0,
+    max: 365
+},
 },{
     timestamps: true
 });

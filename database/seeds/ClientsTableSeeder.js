@@ -1,15 +1,16 @@
 import mongoose from 'mongoose';
 import Clients from '../../models/Clients.js';
 import connectDB from '../../config/database.js';
+import Country from '../../models/Country.js';
 
 export const clientsTable = async () => {
     try {
         await connectDB();
-
+        const countryId = await Country.findOne({name:"India"})
         const object = [{
             first_name: 'Internal',
             email     : 'internal.hailysoft@gmail.com',
-            country   : 'India',
+            country   : countryId._id,
         }];
 
         await Clients.insertMany(object);

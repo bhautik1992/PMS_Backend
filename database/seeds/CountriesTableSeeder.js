@@ -8,6 +8,7 @@ const countries = [
   { name: "Algeria", code: "DZ", currency: "DZD", symbol: "د.ج" },
   { name: "Andorra", code: "AD", currency: "EUR", symbol: "€" },
   { name: "Angola", code: "AO", currency: "AOA", symbol: "Kz" },
+  { name: "India" , code: "IN", currency: "IND", symbol:"$"},
 ];
 
 export const countryTable = async () => {

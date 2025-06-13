@@ -60,6 +60,7 @@ export const rolePermissionsTable = async () => {
             "country_create",
             "country_edit",
             "country_delete",
+            "report",
         ];
         const role = await Roles.findOne({ name: "Admin" });
         const permissions = await Permissions.find({ action: { $in: actions } });

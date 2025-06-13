@@ -28,13 +28,27 @@ export const listing = async (req, res) => {
             { $skip: (pageNumber - 1) * perPageNumber },
             { $limit: perPageNumber },
             {
+                $lookup: {
+                    from: 'countries',
+                    localField: 'country',
+                    foreignField: '_id',
+                    as: 'countryInfo'
+                }
+            },
+            {
+                $unwind: {
+                    path: '$countryInfo',
+                    preserveNullAndEmptyArrays: true
+                }
+            },
+            {
                 $project: {
                     _id: 1,
                     first_name: 1,
                     last_name: 1,
                     email: 1,
-                    country: 1,
-                    is_active: 1
+                    is_active: 1,
+                    country: '$countryInfo.name'
                 }
             }
         ]);
@@ -42,10 +56,10 @@ export const listing = async (req, res) => {
         const total = await Clients.countDocuments(query);
         return successResponse(res, { clients, total });
     } catch (error) {
-        // console.log(error.message)
         return errorResponse(res, process.env.ERROR_MSG, error, 500);
     }
 }
+
 
 export const create = async (req, res) => {
     try {

@@ -13,9 +13,16 @@ import { forgotPassword } from "../controllers/ForgotPasswordController.js";
 import { resetPassword } from "../controllers/ResetPasswordController.js";
 import Holiday from "./routes/Holiday.js";
 import Country from "./routes/Country.js";
+import { refreshToken, logout } from "../controllers/AuthController.js";
+import {
+    loginLimiter,
+    forgotPasswordLimiter,
+    resetPasswordLimiter,
+    refreshLimiter,
+} from '../middleware/authRateLimit.js';
 
 const router = express.Router();
-router.use("/login", Login);
+router.use("/login", loginLimiter ,Login);
 router.use("/user", User);
 router.use("/settings", Settings);
 router.use("/roles", Roles);
@@ -28,7 +35,10 @@ router.use("/clients", Clients);
 router.use("/holidays", Holiday);
 router.use("/country", Country);
 
-router.post("/forgot_password", forgotPassword);
-router.post("/reset_password", resetPassword);
+router.post("/forgot_password", forgotPasswordLimiter,forgotPassword);
+router.post("/reset_password", resetPasswordLimiter ,resetPassword);
+router.post("/refresh-token", refreshLimiter,refreshToken);
+router.post("/logout", logout);
+
 
 export default router;

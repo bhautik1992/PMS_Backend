@@ -10,6 +10,7 @@ import { formatWord } from '../helpers/Common.js';
 import mongoose from 'mongoose';
 import moment from 'moment';
 import { passwordEmail } from '../helpers/SendEmail.js';
+import { revokeAllRefreshTokensForUserAndClearCookie } from '../helpers/RefreshTokenService.js';
 import { generatePlainPassword } from '../helpers/Common.js';
 
 export const getUsers = async (req, res) => {
@@ -218,7 +219,9 @@ export const changePassword = async (req, res) => {
         if(!updatedUser){
             return errorResponse(res, "Collaborator not found!", null, 404);
         }
-        
+
+        await revokeAllRefreshTokensForUserAndClearCookie(userId, res);
+
         return successResponse(res, {}, 200, "Password Updated Successfully");
     } catch (error) {
         // error.message

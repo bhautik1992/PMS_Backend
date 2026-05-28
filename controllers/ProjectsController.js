@@ -1,4 +1,5 @@
 import Projects from '../models/Projects.js';
+import Tasks from '../models/Tasks.js';
 import { successResponse, errorResponse } from '../helpers/ResponseHandler.js';
 import mongoose from 'mongoose';
 
@@ -188,17 +189,32 @@ export const duration = async (req, res) => {
     }
 }
 
+
 export const destroy = async (req, res) => {
     try {
         const { id } = req.body;
-        
-        await Projects.delete({_id:id})
-        return successResponse(res, {}, 200, "Project Deleted Successfully");
-    }catch(error){
-        // error.message
+        if (!mongoose.Types.ObjectId.isValid(id)) {
+            return errorResponse(res, process.env.NO_RECORD, null, 400);
+        }
+        const project = await Projects.findById(id);
+        if (!project) {
+            return errorResponse(res, process.env.NO_RECORD, null, 404);
+        }
+        const activeTaskCount = await Tasks.countDocuments({ project_id: id });
+        if (activeTaskCount > 0) {
+            return errorResponse(
+                res,
+                `Cannot delete project. ${activeTaskCount} task(s) still exist under this project.`,
+                null,
+                409
+            );
+        }
+        await Projects.delete({ _id: id }); 
+        return successResponse(res, {}, 200, 'Project Deleted Successfully');
+    } catch (error) {
         return errorResponse(res, process.env.ERROR_MSG, error, 500);
     }
-}
+};
 
 export const team = async (req, res) => {
     try{

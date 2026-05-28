@@ -1,5 +1,6 @@
 import express from 'express';
 import dotenv from 'dotenv';
+import cookieParser from 'cookie-parser';
 import router from './router/index.js';
 import connectDB from './config/database.js';
 import cors from 'cors';
@@ -24,9 +25,12 @@ app.use(cors({
 app.use('/uploads', express.static(path.join(__dirname, 'uploads')));
 
 app.use(express.json());
+app.use(cookieParser());
 app.use(process.env.API_PREFIX, router); 
+app.set('trust proxy', 1);
 
-// Error handling middleware (optional)
+
+// Error handling middleware 
 app.use((err, req, res, next) => {
     console.error(err.stack);
     res.status(500).json({ message: 'An error occurred', error: err.message });

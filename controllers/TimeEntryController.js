@@ -49,7 +49,7 @@ export const history = async (req, res) => {
             }
         ]);
 
-        if(!entries) {
+        if(entries.length===0) {
             return errorResponse(res, process.env.NO_RECORD, null, 404);
         }
     

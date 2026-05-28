@@ -3,12 +3,14 @@ import User from '../../models/User.js';
 import Banks from '../../models/Banks.js';
 import BankDetails from '../../models/BankDetails.js';
 import connectDB from '../../config/database.js';
+import dotenv from 'dotenv'
+dotenv.config()
 
 export const bankDetailsTable = async () => {
     try {
         await connectDB();
 
-        const user = await User.findOne();
+        const user = await User.findOne({username:'Sam'});
         if (!user) {
             console.error("User not found! Please run the user seeder first.");
             mongoose.connection.close();
@@ -44,3 +46,4 @@ export const bankDetailsTable = async () => {
     }
 };
 
+bankDetailsTable()

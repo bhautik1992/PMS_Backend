@@ -1,18 +1,32 @@
 import Projects from '../models/Projects.js';
 import Tasks from '../models/Tasks.js';
+import User from '../models/User.js'
 import { successResponse, errorResponse } from '../helpers/ResponseHandler.js';
 import mongoose from 'mongoose';
 
 export const index = async (req, res) => {
     try {
-        const { userId } = req.params;
-        let projects     = [];
+        const { userId, search = "", page = 1, perPage = 10 } = req.query;
+        const pageNumber = parseInt(page, 10);
+        const perPageNumber = parseInt(perPage, 10)
+        let projects = [];
+        const currentUser = await User.findById(userId).populate('role_id');
+        const isAdmin = currentUser?.role_id?.name === 'Admin';
+        const query = search ? {
+            $or: [
+                { name: new RegExp(search, "i") },
+                { type: new RegExp(search, 'i') }
+            ]
+        } : {};
 
-        if(userId){
+        if (userId) {
             projects = await Projects.aggregate([
-                {
-                    $match: { users_id: new mongoose.Types.ObjectId(userId) }
-                },
+                { $match: query },
+                ...(!isAdmin ? [
+                    {
+                        $match: { users_id: new mongoose.Types.ObjectId(userId) }
+                    }
+                ] : []),
                 {
                     $lookup: {
                         from: "clients",
@@ -30,37 +44,40 @@ export const index = async (req, res) => {
 
                 {
                     $lookup: {
-                      from: "tasks",
-                      localField: "_id",
-                      foreignField: "project_id",
-                      as: "tasks"
+                        from: "tasks",
+                        localField: "_id",
+                        foreignField: "project_id",
+                        as: "tasks"
                     }
                 },
                 {
                     $lookup: {
-                      from: "time_entries",
-                      let: { projectId: "$_id" },
-                      pipeline: [
-                        {
-                          $match: {
-                            $expr: {
-                              $eq: ["$project_id", "$$projectId"]
+                        from: "time_entries",
+                        let: { projectId: "$_id" },
+                        pipeline: [
+                            {
+                                $match: {
+                                    $expr: {
+                                        $eq: ["$project_id", "$$projectId"]
+                                    }
+                                }
                             }
-                          }
-                        }
-                      ],
-                      as: "time_entries"
+                        ],
+                        as: "time_entries"
                     }
                 },
                 {
                     $addFields: {
-                      total_task_hours: { $sum: "$tasks.hours" },
-                      total_logged_hours: { $sum: "$time_entries.hours" }
+                        total_task_hours: { $sum: "$tasks.hours" },
+                        total_logged_hours: { $sum: "$time_entries.hours" }
                     }
                 },
                 {
                     $sort: { createdAt: -1 }
+
                 },
+                { $skip: (pageNumber - 1) * perPageNumber },
+                { $limit: perPageNumber },
                 {
                     $project: {
                         _id: 1,
@@ -92,34 +109,41 @@ export const index = async (req, res) => {
                     }
                 }
             ]);
-        }else{
+            const totalCountQuery = isAdmin ? query : { ...query, users_id: new mongoose.Types.ObjectId(userId) };
+            const total = await Projects.countDocuments(totalCountQuery);
+
+            return successResponse(res, {
+                data: projects,
+                total,
+            });
+        } else {
             projects = await Projects.find().sort({ _id: -1 });
         }
 
-        return successResponse(res,projects);
+        return successResponse(res, projects);
     } catch (error) {
         // console.log(error.message)
-        return errorResponse(res,process.env.ERROR_MSG,error,500);
+        return errorResponse(res, process.env.ERROR_MSG, error, 500);
     }
 }
 
 export const create = async (req, res) => {
     try {
-        const modifiedUser = req.body.users_id.map(({ value }) => ( value ));
-        
+        const modifiedUser = req.body.users_id.map(({ value }) => (value));
+
         let data = {
             ...req.body,
-            type:req.body.type.value,
-            currency:req.body.currency.value,
-            billing_cycle:req.body.billing_cycle.value,
+            type: req.body.type.value,
+            currency: req.body.currency.value,
+            billing_cycle: req.body.billing_cycle.value,
             users_id: modifiedUser,
-            client_id:req.body.client_id.value,
-            status:req.body.status.value,
+            client_id: req.body.client_id.value,
+            status: req.body.status.value,
         }
 
         const project = new Projects(data);
         await project.save();
-        
+
         return successResponse(res, {}, 200, "Project Created Successfully");
     } catch (error) {
         // console.log(error.message)
@@ -128,15 +152,15 @@ export const create = async (req, res) => {
 }
 
 export const edit = async (req, res) => {
-    try{
+    try {
         const { id } = req.params;
-        
-        if(!mongoose.Types.ObjectId.isValid(id)){
+
+        if (!mongoose.Types.ObjectId.isValid(id)) {
             return errorResponse(res, process.env.NO_RECORD, null, 400);
         }
 
         const project = await Projects.findById(id);
-        if(!project){
+        if (!project) {
             return errorResponse(res, process.env.NO_RECORD, null, 404);
         }
 
@@ -149,19 +173,19 @@ export const edit = async (req, res) => {
 
 export const update = async (req, res) => {
     try {
-        const modifiedUser = req.body.users_id.map(({ value }) => ( value ));
-        
+        const modifiedUser = req.body.users_id.map(({ value }) => (value));
+
         let data = {
             ...req.body,
-            type:req.body.type.value,
-            currency:req.body.currency.value,
-            billing_cycle:req.body.billing_cycle.value,
+            type: req.body.type.value,
+            currency: req.body.currency.value,
+            billing_cycle: req.body.billing_cycle.value,
             users_id: modifiedUser,
-            client_id:req.body.client_id.value,
-            status:req.body.status.value,
+            client_id: req.body.client_id.value,
+            status: req.body.status.value,
         }
 
-        await Projects.findByIdAndUpdate(req.body._id, data, { new: true });        
+        await Projects.findByIdAndUpdate(req.body._id, data, { new: true });
         return successResponse(res, {}, 200, "Project Updated Successfully");
     } catch (error) {
         // console.log(error.message)
@@ -170,15 +194,15 @@ export const update = async (req, res) => {
 }
 
 export const duration = async (req, res) => {
-    try{
+    try {
         const { id } = req.params;
-        
-        if(!mongoose.Types.ObjectId.isValid(id)){
+
+        if (!mongoose.Types.ObjectId.isValid(id)) {
             return errorResponse(res, process.env.NO_RECORD, null, 400);
         }
 
         const project = await Projects.findById(id).select('start_date end_date');
-        if(!project){
+        if (!project) {
             return errorResponse(res, process.env.NO_RECORD, null, 404);
         }
 
@@ -209,7 +233,7 @@ export const destroy = async (req, res) => {
                 409
             );
         }
-        await Projects.delete({ _id: id }); 
+        await Projects.delete({ _id: id });
         return successResponse(res, {}, 200, 'Project Deleted Successfully');
     } catch (error) {
         return errorResponse(res, process.env.ERROR_MSG, error, 500);
@@ -217,10 +241,10 @@ export const destroy = async (req, res) => {
 };
 
 export const team = async (req, res) => {
-    try{
+    try {
         const { id } = req.params;
-        
-        if(!mongoose.Types.ObjectId.isValid(id)){
+
+        if (!mongoose.Types.ObjectId.isValid(id)) {
             return errorResponse(res, process.env.NO_RECORD, null, 400);
         }
 
@@ -235,7 +259,7 @@ export const team = async (req, res) => {
                 }
             });
 
-        if(!team){
+        if (!team) {
             return errorResponse(res, process.env.NO_RECORD, null, 404);
         }
 

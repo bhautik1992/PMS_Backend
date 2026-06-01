@@ -2,6 +2,8 @@ import Tasks from '../models/Tasks.js';
 import { successResponse, errorResponse } from '../helpers/ResponseHandler.js';
 import { getAssignedProjectsList, getReporintgToList } from '../helpers/Common.js';
 import mongoose from 'mongoose';
+import User from '../models/User.js';
+import Projects from '../models/Projects.js';
 
 export const index = async (req, res) => {
     try {
@@ -13,9 +15,16 @@ export const index = async (req, res) => {
         const pageNumber = parseInt(page, 10);
         const perPageNumber = parseInt(perPage, 10);
 
-        const query = search ? { name: new RegExp(search, "i") } : {};
+        const query = search ? { 
+            $or: [
+                { name: new RegExp(search, "i") },
+            ]
+        } : {};
+        const currentUser = await User.findById(userId).populate('role_id')
+        const isAdmin = currentUser?.role_id?.name === 'Admin'
 
         const tasks = await Tasks.aggregate([
+            { $match: query },
             {
                 $lookup: {
                     from: "users",
@@ -25,16 +34,15 @@ export const index = async (req, res) => {
                 }
             },
             { $unwind: { path: "$user_info", preserveNullAndEmptyArrays: true } },
-
-            {
+            ...(!isAdmin ? [{
                 $match: {
                     $or: [
                         { user_id: new mongoose.Types.ObjectId(userId) },
                         { "user_info.reporting_to": new mongoose.Types.ObjectId(userId) }
                     ]
                 }
-            },
-
+            }] : []
+            ),
             {
                 $lookup: {
                     from: "projects", // Projects collection to join
@@ -44,13 +52,13 @@ export const index = async (req, res) => {
                 }
             },
             { $unwind: { path: "$project_info", preserveNullAndEmptyArrays: true } },
-
-            {
-                $match: {
-                    "project_info.users_id": new mongoose.Types.ObjectId(userId)
-                }
-            },
-
+            ...(!isAdmin ? [
+                {
+                    $match: {
+                        "project_info.users_id": new mongoose.Types.ObjectId(userId)
+                    }
+                }] : []
+            ),
             ...(projectId && selAssignedTo ? [{
                 $match: {
                     project_id: new mongoose.Types.ObjectId(projectId),
@@ -261,10 +269,26 @@ export const update = async (req, res) => {
 export const getFilters = async (req, res) => {
     try {
         const { id } = req.query;
-
-        const projects = await getAssignedProjectsList(id);
-        const reporting = await getReporintgToList(id);
-
+        let projects = null
+        let reporting = null
+        console.log(id)
+        const currentUser = await User.findById(id).populate('role_id')
+        console.log(currentUser)
+        const isAdmin = currentUser?.role_id?.name === 'Admin'
+        console.log(isAdmin)
+        if (!isAdmin) {
+            console.log('here')
+             projects = await getAssignedProjectsList(id);
+             console.log(projects)
+             reporting = await getReporintgToList(id)
+             console.log(reporting)
+        }
+        else{
+            console.log('here2')
+            projects= await Projects.find({}).select('name _id')
+            reporting=await User.find({}).select('_id first_name last_name')
+            console.log(reporting)
+        }
         return successResponse(res, { projects, reporting });
     } catch (error) {
         // console.log(error.message);

@@ -10,7 +10,7 @@ export const bankDetailsTable = async () => {
     try {
         await connectDB();
 
-        const user = await User.findOne({username:'Sam'});
+        const user = await User.findOne({username:'Sammy'});
         if (!user) {
             console.error("User not found! Please run the user seeder first.");
             mongoose.connection.close();

@@ -271,23 +271,16 @@ export const getFilters = async (req, res) => {
         const { id } = req.query;
         let projects = null
         let reporting = null
-        console.log(id)
+        
         const currentUser = await User.findById(id).populate('role_id')
-        console.log(currentUser)
         const isAdmin = currentUser?.role_id?.name === 'Admin'
-        console.log(isAdmin)
         if (!isAdmin) {
-            console.log('here')
              projects = await getAssignedProjectsList(id);
-             console.log(projects)
              reporting = await getReporintgToList(id)
-             console.log(reporting)
         }
         else{
-            console.log('here2')
             projects= await Projects.find({}).select('name _id')
             reporting=await User.find({}).select('_id first_name last_name')
-            console.log(reporting)
         }
         return successResponse(res, { projects, reporting });
     } catch (error) {

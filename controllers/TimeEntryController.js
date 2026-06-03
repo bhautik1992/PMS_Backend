@@ -51,7 +51,7 @@ export const history = async (req, res) => {
     
         return successResponse(res, entries, 200, '');
     } catch (error) {
-        console.log(error.message);
+        // console.log(error.message);
         return errorResponse(res, process.env.ERROR_MSG, error, 500);
     }
 }

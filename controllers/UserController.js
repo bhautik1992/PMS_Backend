@@ -4,7 +4,7 @@ import Permissions from '../models/Permissions.js';
 import Settings from '../models/Settings.js';
 import UserPermissions from '../models/UserPermissions.js';
 import { successResponse, errorResponse } from '../helpers/ResponseHandler.js';
-import { getPermissionsByRole } from '../helpers/Common.js';
+import { getPermissionsByRole, getPermissionsLists, getTimeEntryUsersList } from '../helpers/Common.js';
 import { validateUniqueBankDetails } from './BankDetailsController.js';
 import { formatWord } from '../helpers/Common.js';
 import mongoose from 'mongoose';
@@ -95,6 +95,53 @@ export const getUsers = async (req, res) => {
     }
 };
 
+export const currentUser = async (req, res) => {
+    try {
+        const token = req.headers['authorization']?.split(' ')[1];
+        const user = await User.findById(req.user.id)
+            .select('-createdAt -updatedAt -deletedAt -deleted -__v')
+            .populate('role_id', 'name')
+            .populate('designation_id', 'name')
+            .populate({
+                path: 'reporting_to',
+                select: 'first_name last_name designation_id',
+                populate: {
+                    path: 'designation_id',
+                    select: 'name'
+                }
+            });
+
+        if(!user){
+            return errorResponse(res, 'User not found!', null, 404);
+        }
+
+        const object = user.toObject();
+        object._token = token;
+        delete object.password;
+
+        const permissions = await getPermissionsLists(user._id, user.role_id._id);
+
+        return res.status(200).json({
+            success: true,
+            message: 'Profile refreshed successfully.',
+            data: object,
+            permissions
+        });
+    } catch (error) {
+        return errorResponse(res, process.env.ERROR_MSG, error, 500);
+    }
+}
+
+export const timeEntryUsers = async (req, res) => {
+    try {
+        const users = await getTimeEntryUsersList(req.user.id);
+
+        return successResponse(res, users, 200, 'Time entry users fetched successfully');
+    } catch (error) {
+        return errorResponse(res, process.env.ERROR_MSG, error, 500);
+    }
+}
+
 export const createUser = async (req, res) => {
     try {
         const { personalInfo, addressInfo, companyInfo, bankInfo } = req.body;
@@ -137,6 +184,9 @@ export const createUser = async (req, res) => {
             role_id       : mergedInfo.role_id.value,
             reporting_to  : mergedInfo.reporting_to.value,
             birth_date    : moment(mergedInfo.birth_date, "DD-MM-YYYY").format("YYYY-MM-DD"),
+            ...(mergedInfo.date_of_joining && {
+                date_of_joining: moment(mergedInfo.date_of_joining, "DD-MM-YYYY").format("YYYY-MM-DD")
+            }),
             password      :plainPassword,
             employee_code
         }
@@ -399,6 +449,9 @@ export const update = async (req, res) => {
             ...(mergedInfo.role_id?.value && { role_id: mergedInfo.role_id.value }),
             ...(mergedInfo.reporting_to?.value && { reporting_to: mergedInfo.reporting_to.value }),
             ...(mergedInfo.birth_date && { birth_date: moment(mergedInfo.birth_date, "DD-MM-YYYY").format("YYYY-MM-DD") }),
+            ...(mergedInfo.date_of_joining && {
+                date_of_joining: moment(mergedInfo.date_of_joining, "DD-MM-YYYY").format("YYYY-MM-DD")
+            }),
         }
         await User.findByIdAndUpdate(userId, object1, { new: true });
 
@@ -436,5 +489,4 @@ export const destroy = async (req, res) => {
         return errorResponse(res, process.env.ERROR_MSG, error, 500);
     }
 }
-
 

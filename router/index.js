@@ -11,8 +11,10 @@ import TimeEntry from "./routes/TimeEntry.js";
 import Clients from "./routes/Clients.js";
 import { forgotPassword } from "../controllers/ForgotPasswordController.js";
 import { resetPassword } from "../controllers/ResetPasswordController.js";
+
 import Holiday from "./routes/Holiday.js";
 import Country from "./routes/Country.js";
+import TestMail from "./routes/TestMail.js";
 
 const router = express.Router();
 router.use("/login", Login);
@@ -27,6 +29,8 @@ router.use("/time_entry", TimeEntry);
 router.use("/clients", Clients);
 router.use("/holidays", Holiday);
 router.use("/country", Country);
+
+router.use("/test-mail", TestMail);
 
 router.post("/forgot_password", forgotPassword);
 router.post("/reset_password", resetPassword);

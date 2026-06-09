@@ -1,73 +1,138 @@
 import Tasks from '../models/Tasks.js';
+import Projects from '../models/Projects.js';
+import User from '../models/User.js';
 import { successResponse, errorResponse } from '../helpers/ResponseHandler.js';
 import { getAssignedProjectsList, getReporintgToList } from '../helpers/Common.js';
 import mongoose from 'mongoose';
+
+const normalizeFilter = (filter) => {
+    if(!filter){
+        return [];
+    }
+
+    if(typeof filter === 'string'){
+        try {
+            const parsedFilter = JSON.parse(filter);
+            return Array.isArray(parsedFilter) ? parsedFilter : Object.values(parsedFilter);
+        } catch (error) {
+            return [];
+        }
+    }
+
+    if(Array.isArray(filter)){
+        return filter;
+    }
+
+    return Object.values(filter);
+}
+
+const getTaskListPipeline = ({ userId, projectId = '', selAssignedTo = '', search = '', isAdmin = false }) => {
+    const authUserId = new mongoose.Types.ObjectId(userId);
+    const pipeline = [
+        {
+            $lookup: {
+                from: "users",
+                localField: "user_id",
+                foreignField: "_id",
+                as: "user_info"
+            }
+        },
+        { $unwind: { path: "$user_info", preserveNullAndEmptyArrays: true } },
+    ];
+
+    if(!isAdmin){
+        pipeline.push(
+        {
+            $match: {
+                deleted: { $ne: true },
+                deletedAt: null,
+                $or: [
+                    { user_id: authUserId },
+                    { "user_info.reporting_to": authUserId }
+                ]
+            }
+        });
+    }else{
+        pipeline.push({
+            $match: {
+                deleted: { $ne: true },
+                deletedAt: null
+            }
+        });
+    }
+
+    pipeline.push(
+        {
+            $lookup: {
+                from: "projects",
+                localField: "project_id",
+                foreignField: "_id",
+                as: "project_info"
+            }
+        },
+        { $unwind: { path: "$project_info", preserveNullAndEmptyArrays: true } },
+    );
+
+    if(search){
+        pipeline.push({
+            $match: {
+                $or: [
+                    { name: new RegExp(search, "i") },
+                    { "project_info.name": new RegExp(search, "i") },
+                    { "user_info.first_name": new RegExp(search, "i") },
+                    { "user_info.last_name": new RegExp(search, "i") },
+                ]
+            }
+        });
+    }
+
+    const validProjectId = mongoose.Types.ObjectId.isValid(projectId) ? projectId : '';
+    const validAssignedTo = mongoose.Types.ObjectId.isValid(selAssignedTo) ? selAssignedTo : '';
+
+    if(validProjectId && validAssignedTo){
+        pipeline.push({
+            $match: {
+                project_id: new mongoose.Types.ObjectId(validProjectId),
+                user_id: new mongoose.Types.ObjectId(validAssignedTo)
+            }
+        });
+    }else if(validProjectId){
+        pipeline.push({
+            $match: {
+                project_id: new mongoose.Types.ObjectId(validProjectId)
+            }
+        });
+    }else if(validAssignedTo){
+        pipeline.push({
+            $match: {
+                user_id: new mongoose.Types.ObjectId(validAssignedTo)
+            }
+        });
+    }
+
+    return pipeline;
+}
 
 export const index = async (req, res) => {
     try {
         const { page = 1, perPage = 10, search = "", filter = [], userId } = req.query;
 
-        const projectId     = filter.find(f => f.type === 'project')?.value || '';
-        const selAssignedTo = filter.find(f => f.type === 'assignedto')?.value || '';
+        if(!mongoose.Types.ObjectId.isValid(userId)){
+            return errorResponse(res, process.env.NO_RECORD, null, 400);
+        }
+
+        const normalizedFilter = normalizeFilter(filter);
+        const projectId     = normalizedFilter.find(f => f.type === 'project')?.value || '';
+        const selAssignedTo = normalizedFilter.find(f => f.type === 'assignedto')?.value || '';
+        const authUser = await User.findById(userId).populate('role_id', 'name').lean();
+        const isAdmin = authUser?.role_id?.name?.toLowerCase() === 'admin';
 
         const pageNumber    = parseInt(page, 10);
         const perPageNumber = parseInt(perPage, 10);
 
-        const query = search ? { name: new RegExp(search, "i") } : {};
-
+        const listPipeline = getTaskListPipeline({ userId, projectId, selAssignedTo, search, isAdmin });
         const tasks = await Tasks.aggregate([
-            {
-                $lookup: {
-                    from: "users",
-                    localField: "user_id",
-                    foreignField: "_id",
-                    as: "user_info"
-                }
-            },
-            { $unwind: { path: "$user_info", preserveNullAndEmptyArrays: true } },
-
-            {
-                $match: {
-                    $or: [
-                        { user_id: new mongoose.Types.ObjectId(userId) },
-                        { "user_info.reporting_to": new mongoose.Types.ObjectId(userId) }
-                    ]
-                }
-            },
-            
-            {
-                $lookup: {
-                    from: "projects", // Projects collection to join
-                    localField: "project_id", // Field in Tasks collection
-                    foreignField: "_id",  // Field in Projects collection
-                    as: "project_info" // The alias for project info
-                }
-            },
-            { $unwind: { path: "$project_info", preserveNullAndEmptyArrays: true } },
-            
-            {
-                $match: {
-                    "project_info.users_id": new mongoose.Types.ObjectId(userId)
-                }
-            },
-
-            ...(projectId && selAssignedTo ? [{
-                $match: {
-                    project_id: new mongoose.Types.ObjectId(projectId),
-                    user_id: new mongoose.Types.ObjectId(selAssignedTo)
-                }
-            }] :
-            projectId ? [{
-                $match: {
-                    project_id: new mongoose.Types.ObjectId(projectId)
-                }
-            }] :
-            selAssignedTo ? [{
-                $match: {
-                    user_id: new mongoose.Types.ObjectId(selAssignedTo)
-                }
-            }] : []),
-
+            ...listPipeline,
             {
                 $lookup: {
                     from: "time_entries",
@@ -124,6 +189,7 @@ export const index = async (req, res) => {
                         }
                     },
                     name: 1,
+                    description: 1,
                     user_name: {
                         $cond: {
                           if: { $eq: ["$user_id", new mongoose.Types.ObjectId(userId)] },
@@ -156,7 +222,11 @@ export const index = async (req, res) => {
             }
         ]);
 
-        const total = await Tasks.countDocuments(query);
+        const totalResult = await Tasks.aggregate([
+            ...listPipeline,
+            { $count: 'total' }
+        ]);
+        const total = totalResult[0]?.total || 0;
         return successResponse(res, { data: tasks, total });
     }catch (error) {
         // error.message
@@ -176,6 +246,7 @@ export const create = async (req, res) => {
 
         const task = new Tasks(data);
         await task.save();
+        await Projects.findByIdAndUpdate(data.project_id, { $addToSet: { users_id: data.user_id } });
 
         return successResponse(res, {}, 200, "Task Created Successfully");
     } catch (error) {
@@ -233,6 +304,7 @@ export const update = async (req, res) => {
         if (!task) {
             return errorResponse(res, "Task not found!", null, 404);
         }
+        await Projects.findByIdAndUpdate(data.project_id, { $addToSet: { users_id: data.user_id } });
 
         return successResponse(res, {}, 200, "Task Updated Successfully");
     } catch (error) {
@@ -254,5 +326,3 @@ export const getFilters = async (req, res) => {
         return errorResponse(res, process.env.ERROR_MSG, error, 500);
     }
 }
-
-

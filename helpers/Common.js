@@ -2,6 +2,7 @@ import RolePermissions from '../models/RolePermissions.js';
 import {successResponse, errorResponse} from './ResponseHandler.js';
 import Projects from '../models/Projects.js';
 import User from '../models/User.js';
+import Tasks from '../models/Tasks.js';
 
 export const convertTimeToDecimal = (time) => {
     const [hours, minutes] = time.split(':').map(Number);
@@ -127,17 +128,124 @@ export const generatePlainPassword = () => {
 }
 
 export const getAssignedProjectsList = async (userId) => {
+    const authUser = await User.findById(userId).populate('role_id', 'name').lean();
+    const isAdmin = authUser?.role_id?.name?.toLowerCase() === 'admin';
+
+    if(isAdmin){
+        return await Projects.find(
+            { deleted: { $ne: true }, deletedAt: null },
+            { _id: 1, name: 1 }
+        ).sort({ _id: -1 });
+    }
+
+    const taskProjectIds = await Tasks.distinct('project_id', {
+        user_id: userId,
+        deleted: { $ne: true },
+        deletedAt: null
+    });
+
     return await Projects.find(
-        { users_id: userId },
+        {
+            deleted: { $ne: true },
+            deletedAt: null,
+            $or: [
+                { users_id: userId },
+                { _id: { $in: taskProjectIds } }
+            ]
+        },
         { _id: 1, name: 1 }
     ).sort({ _id: -1 });
 }
 
 export const getReporintgToList = async (userId) => {
+    const authUser = await User.findById(userId).populate('role_id', 'name').lean();
+    const isAdmin = authUser?.role_id?.name?.toLowerCase() === 'admin';
+
+    if(isAdmin){
+        return await User.find(
+            { deleted: { $ne: true }, deletedAt: null },
+            { _id: 1, first_name: 1, last_name: 1 }
+        ).sort({ _id: -1 });
+    }
+
     return await User.find(
-        { reporting_to: userId },
+        {
+            $or: [
+                { _id: userId },
+                { reporting_to: userId }
+            ]
+        },
         { _id: 1, first_name: 1, last_name: 1 }
     ).sort({ _id: -1 });  
 }
 
+export const getReportingHierarchyUserIds = async (userId) => {
+    const rootId = userId.toString();
+    const visited = new Set([rootId]);
+    const queue = [rootId];
 
+    while(queue.length){
+        const managerId = queue.shift();
+        const directReports = await User.find(
+            { reporting_to: managerId, deleted: { $ne: true }, deletedAt: null },
+            { _id: 1 }
+        ).lean();
+
+        directReports.forEach((report) => {
+            const reportId = report._id.toString();
+
+            if(!visited.has(reportId)){
+                visited.add(reportId);
+                queue.push(reportId);
+            }
+        });
+    }
+
+    return Array.from(visited);
+}
+
+export const getTimeEntryUsersList = async (userId) => {
+    const authUser = await User.findById(userId).populate('role_id', 'name').lean();
+    const isAdmin = authUser?.role_id?.name?.toLowerCase() === 'admin';
+
+    if(isAdmin){
+        return await User.find(
+            { deleted: { $ne: true }, deletedAt: null },
+            { _id: 1, first_name: 1, last_name: 1, designation_id: 1, reporting_to: 1 }
+        )
+            .populate('designation_id', 'name')
+            .sort({ first_name: 1, last_name: 1 });
+    }
+
+    const hierarchy = [];
+    const visited = new Set();
+
+    const addUserWithReports = async (currentUserId, level = 0) => {
+        const currentUser = await User.findOne(
+            { _id: currentUserId, deleted: { $ne: true }, deletedAt: null },
+            { _id: 1, first_name: 1, last_name: 1, designation_id: 1, reporting_to: 1 }
+        )
+            .populate('designation_id', 'name')
+            .lean();
+
+        if(!currentUser || visited.has(currentUser._id.toString())){
+            return;
+        }
+
+        visited.add(currentUser._id.toString());
+        hierarchy.push({ ...currentUser, hierarchy_level: level });
+
+        const directReports = await User.find(
+            { reporting_to: currentUser._id, deleted: { $ne: true }, deletedAt: null },
+            { _id: 1 }
+        ).sort({ first_name: 1, last_name: 1 }).lean();
+
+        for(const report of directReports){
+            await addUserWithReports(report._id, level + 1);
+        }
+    }
+
+    await addUserWithReports(userId);
+
+    return hierarchy;
+}

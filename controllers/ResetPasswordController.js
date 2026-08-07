@@ -1,5 +1,6 @@
 import User from "../models/User.js";
 import { successResponse, errorResponse } from "../helpers/ResponseHandler.js";
+import { revokeAllRefreshTokensForUserAndClearCookie } from "../helpers/RefreshTokenService.js";
 
 export const resetPassword = async (req, res) => {
     try{
@@ -16,6 +17,8 @@ export const resetPassword = async (req, res) => {
         user.reset_token         = null;
         user.reset_token_expires = null;
         await user.save();
+
+        await revokeAllRefreshTokensForUserAndClearCookie(user._id, res);
 
         return successResponse(res, user, 200, 'Password reset successfully');
     }catch(error){

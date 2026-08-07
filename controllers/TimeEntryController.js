@@ -88,10 +88,6 @@ export const history = async (req, res) => {
                 }
             }
         ]);
-
-        if(!entries) {
-            return errorResponse(res, process.env.NO_RECORD, null, 404);
-        }
     
         return successResponse(res, entries, 200, '');
     } catch (error) {

@@ -20,7 +20,13 @@ export const listing = async (req, res) => {
         const pageNumber    = parseInt(page, 10);
         const perPageNumber = parseInt(perPage, 10);
 
-        const query = search ? { name: new RegExp(search, "i") } : {};
+       const query = search ? { 
+            $or: [
+                { first_name: new RegExp(search, "i") },
+                { last_name: new RegExp(search, "i") },
+                { email: new RegExp(search, "i") }
+            ]
+        } : {};
 
         const clients = await Clients.aggregate([
             { $match: query },

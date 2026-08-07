@@ -4,8 +4,6 @@ import User from '../models/User.js';
 import { successResponse, errorResponse } from '../helpers/ResponseHandler.js';
 import { getAssignedProjectsList, getReporintgToList } from '../helpers/Common.js';
 import mongoose from 'mongoose';
-import User from '../models/User.js';
-import Projects from '../models/Projects.js';
 
 const normalizeFilter = (filter) => {
     if(!filter){
@@ -119,8 +117,10 @@ export const index = async (req, res) => {
     try {
         const { page = 1, perPage = 10, search = "", filter = [], userId } = req.query;
 
-        const projectId = filter.find(f => f.type === 'project')?.value || '';
-        const selAssignedTo = filter.find(f => f.type === 'assignedto')?.value || '';
+        const normalizedFilter = normalizeFilter(filter);
+
+        const projectId = normalizedFilter.find((f) => f?.type === 'project')?.value || '';
+        const selAssignedTo = normalizedFilter.find((f) => f?.type === 'assignedto')?.value || '';
 
         const pageNumber = parseInt(page, 10);
         const perPageNumber = parseInt(perPage, 10);
@@ -133,7 +133,7 @@ export const index = async (req, res) => {
         const currentUser = await User.findById(userId).populate('role_id')
         const isAdmin = currentUser?.role_id?.name === 'Admin'
 
-        const tasks = await Tasks.aggregate([
+        const basePipeline = [
             { $match: query },
             {
                 $lookup: {
@@ -184,7 +184,11 @@ export const index = async (req, res) => {
                         $match: {
                             user_id: new mongoose.Types.ObjectId(selAssignedTo)
                         }
-                    }] : []),
+                    }] : [])
+        ];
+
+        const tasks = await Tasks.aggregate([
+            ...basePipeline,
 
             {
                 $lookup: {
@@ -276,7 +280,7 @@ export const index = async (req, res) => {
         ]);
 
         const totalResult = await Tasks.aggregate([
-            ...listPipeline,
+            ...basePipeline,
             { $count: 'total' }
         ]);
         const total = totalResult[0]?.total || 0;

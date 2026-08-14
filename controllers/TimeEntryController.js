@@ -278,28 +278,10 @@ export const report = async (req, res) => {
                 displayDayTotals[day] = formatHours(displayDayTotals[day] + hours);
             });
 
-            if(!task.entries.length){
-                const taskEndDate = new Date(task.end_date);
-                const plannedDay = taskEndDate >= startDate && taskEndDate < endDate ? taskEndDate.getUTCDate() : null;
-
-                if(plannedDay){
-                    row.display_days[plannedDay] = row.estimated_hours;
-                    row.display_total = row.estimated_hours;
-                    row.entries = [{
-                        _id: `${task._id}-${plannedDay}-planned`,
-                        date: new Date(Date.UTC(reportYear, reportMonth - 1, plannedDay)),
-                        day: plannedDay,
-                        hours: row.estimated_hours,
-                        description: task.description || '',
-                        task_description: task.description || '',
-                        project_name: task.project_name,
-                        task_name: task.task_name,
-                        user_name: task.user_name,
-                        source: 'planned'
-                    }];
-                    displayDayTotals[plannedDay] = formatHours(displayDayTotals[plannedDay] + row.estimated_hours);
-                }
-            }
+            // Do not inject planned/estimated hours into display_days when there are no logged entries.
+            // Previously, tasks without any time entries would populate a planned entry on the task end date
+            // which caused UI to show hours (e.g. 30) for days that had no actual time entries. Avoid that behaviour
+            // by leaving display_days and entries empty for tasks with no logged entries.
 
             return row;
         });
